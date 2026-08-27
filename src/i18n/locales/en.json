@@ -1,0 +1,146 @@
+{
+  "app": {
+    "name": "Home CRM",
+    "subtitle": "Home Management"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "tasks": "Tasks",
+    "shopping": "Shopping",
+    "expenses": "Expenses",
+    "addNew": "Add New",
+    "logout": "Logout"
+  },
+  "header": {
+    "searchTasks": "Search tasks...",
+    "searchShopping": "Search lists...",
+    "notifications": "Notifications",
+    "settings": "Settings",
+    "language": "Language"
+  },
+  "dashboard": {
+    "greetingMorning": "Good morning",
+    "greetingAfternoon": "Good afternoon",
+    "subtitle": "Here is the overview of your home today.",
+    "tasksPending": "Tasks Pending",
+    "highPriority": "{{count}} high priority",
+    "itemsToBuy": "Items to Buy",
+    "acrossLists": "Across {{count}} lists",
+    "totalExpenses": "Total Expenses",
+    "thisMonth": "This month",
+    "upcomingTasks": "Upcoming Tasks",
+    "viewAll": "View All",
+    "latestPurchases": "Latest Purchases",
+    "recentSpending": "Recent Spending",
+    "spendingBreakdown": "Your spending breakdown for the current month",
+    "total": "Total"
+  },
+  "tasks": {
+    "title": "Household Tasks",
+    "allTasks": "All Tasks",
+    "cleaning": "Cleaning",
+    "kitchen": "Kitchen",
+    "garden": "Garden",
+    "pets": "Pets",
+    "listView": "List",
+    "weeklyView": "Weekly",
+    "today": "Today",
+    "weeklyProgress": "Weekly Progress",
+    "complete": "Complete",
+    "tasksDone": "Tasks Done",
+    "remaining": "Remaining",
+    "needHand": "Need a hand?",
+    "needHandDesc": "Quickly add a new task and assign it to the household.",
+    "quickAdd": "Quick Add Task",
+    "priority": {
+      "alta": "High",
+      "media": "Medium",
+      "baja": "Low"
+    },
+    "category": {
+      "limpieza": "Cleaning",
+      "cocina": "Kitchen",
+      "jardin": "Garden",
+      "mascotas": "Pets",
+      "finanzas": "Finances",
+      "exterior": "Outdoor"
+    }
+  },
+  "shopping": {
+    "title": "Shopping Lists",
+    "estimatedTotal": "Estimated Total",
+    "shareList": "Share List",
+    "addItem": "Add Item",
+    "items": "{{count}} items",
+    "addToStore": "Add to {{store}}",
+    "frequentItems": "Frequent Items",
+    "budgetStatus": "Budget Status",
+    "leftThisWeek": "{{amount}} left this week",
+    "used": "{{percent}}% used",
+    "store": {
+      "supermercado": "Supermarket",
+      "farmacia": "Pharmacy",
+      "otros": "Other"
+    }
+  },
+  "expenses": {
+    "title": "Expenses",
+    "register": "Register Expense",
+    "viewList": "View Expenses",
+    "summary": "Expense Summary",
+    "totalGeneral": "Grand Total",
+    "byCategory": "By Category",
+    "listTitle": "Expense List",
+    "registered": "{{count}} expenses registered",
+    "noExpenses": "No expenses registered yet",
+    "loading": "Loading expenses...",
+    "formTitle": "Register New Expense",
+    "titleLabel": "Title",
+    "descriptionLabel": "Description",
+    "dateLabel": "Date",
+    "amountLabel": "Amount ($)",
+    "categoryLabel": "Category",
+    "save": "Register Expense",
+    "saving": "Saving...",
+    "success": "Expense registered successfully",
+    "error": "Error registering expense",
+    "categories": {
+      "supermercado": "Supermarket",
+      "carniceria": "Butcher",
+      "verduleria": "Greengrocer",
+      "delivery": "Delivery",
+      "gastos_personales": "Personal Expenses",
+      "extraordinarios": "Extraordinary",
+      "farmacia": "Pharmacy",
+      "servicios": "Utilities",
+      "mantenimiento": "Maintenance"
+    }
+  },
+  "auth": {
+    "loginTitle": "Sign in",
+    "registerTitle": "Create account",
+    "email": "Email",
+    "password": "Password",
+    "fullName": "Full name",
+    "login": "Sign in",
+    "register": "Sign up",
+    "switchToRegister": "Don't have an account? Sign up",
+    "switchToLogin": "Already have an account? Sign in",
+    "loggingIn": "Signing in...",
+    "registering": "Creating account..."
+  },
+  "setup": {
+    "title": "Configure Supabase",
+    "description": "Create a .env file in the project root with your new Supabase project credentials:",
+    "restart": "Then restart the dev server with npm run dev."
+  },
+  "common": {
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "confirming": "Confirming...",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "loading": "Loading..."
+  }
+}

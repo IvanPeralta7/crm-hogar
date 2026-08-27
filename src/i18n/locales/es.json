@@ -1,0 +1,146 @@
+{
+  "app": {
+    "name": "Crm del hogar",
+    "subtitle": "Gestión del Hogar"
+  },
+  "nav": {
+    "dashboard": "Panel",
+    "tasks": "Tareas",
+    "shopping": "Compras",
+    "expenses": "Gastos",
+    "addNew": "Agregar",
+    "logout": "Salir"
+  },
+  "header": {
+    "searchTasks": "Buscar tareas...",
+    "searchShopping": "Buscar en listas...",
+    "notifications": "Notificaciones",
+    "settings": "Configuración",
+    "language": "Idioma"
+  },
+  "dashboard": {
+    "greetingMorning": "Buenos días",
+    "greetingAfternoon": "Buenas tardes",
+    "subtitle": "Este es el resumen de tu hogar hoy.",
+    "tasksPending": "Tareas pendientes",
+    "highPriority": "{{count}} alta prioridad",
+    "itemsToBuy": "Items por comprar",
+    "acrossLists": "En {{count}} listas",
+    "totalExpenses": "Gastos totales",
+    "thisMonth": "Este mes",
+    "upcomingTasks": "Próximas tareas",
+    "viewAll": "Ver todo",
+    "latestPurchases": "Últimas compras",
+    "recentSpending": "Gasto reciente",
+    "spendingBreakdown": "Desglose de gastos del mes actual",
+    "total": "Total"
+  },
+  "tasks": {
+    "title": "Tareas del hogar",
+    "allTasks": "Todas",
+    "cleaning": "Limpieza",
+    "kitchen": "Cocina",
+    "garden": "Jardín",
+    "pets": "Mascotas",
+    "listView": "Lista",
+    "weeklyView": "Semanal",
+    "today": "Hoy",
+    "weeklyProgress": "Progreso semanal",
+    "complete": "Completado",
+    "tasksDone": "Tareas hechas",
+    "remaining": "Restantes",
+    "needHand": "¿Necesitás ayuda?",
+    "needHandDesc": "Agregá una tarea rápida y asignala al hogar.",
+    "quickAdd": "Agregar tarea",
+    "priority": {
+      "alta": "Alta",
+      "media": "Media",
+      "baja": "Baja"
+    },
+    "category": {
+      "limpieza": "Limpieza",
+      "cocina": "Cocina",
+      "jardin": "Jardín",
+      "mascotas": "Mascotas",
+      "finanzas": "Finanzas",
+      "exterior": "Exterior"
+    }
+  },
+  "shopping": {
+    "title": "Listas de compras",
+    "estimatedTotal": "Total estimado",
+    "shareList": "Compartir lista",
+    "addItem": "Agregar item",
+    "items": "{{count}} items",
+    "addToStore": "Agregar a {{store}}",
+    "frequentItems": "Items frecuentes",
+    "budgetStatus": "Estado del presupuesto",
+    "leftThisWeek": "{{amount}} restantes esta semana",
+    "used": "{{percent}}% usado",
+    "store": {
+      "supermercado": "Supermercado",
+      "farmacia": "Farmacia",
+      "otros": "Otros"
+    }
+  },
+  "expenses": {
+    "title": "Gastos",
+    "register": "Registrar gasto",
+    "viewList": "Ver gastos",
+    "summary": "Resumen de gastos",
+    "totalGeneral": "Total general",
+    "byCategory": "Por categoría",
+    "listTitle": "Lista de gastos",
+    "registered": "{{count}} gastos registrados",
+    "noExpenses": "No hay gastos registrados aún",
+    "loading": "Cargando gastos...",
+    "formTitle": "Registrar nuevo gasto",
+    "titleLabel": "Título",
+    "descriptionLabel": "Descripción",
+    "dateLabel": "Fecha",
+    "amountLabel": "Monto ($)",
+    "categoryLabel": "Categoría",
+    "save": "Registrar gasto",
+    "saving": "Guardando...",
+    "success": "Gasto registrado exitosamente",
+    "error": "Error al registrar el gasto",
+    "categories": {
+      "supermercado": "Supermercado",
+      "carniceria": "Carnicería",
+      "verduleria": "Verdulería",
+      "delivery": "Delivery",
+      "gastos_personales": "Gastos personales",
+      "extraordinarios": "Extraordinarios",
+      "farmacia": "Farmacia",
+      "servicios": "Servicios",
+      "mantenimiento": "Mantenimiento"
+    }
+  },
+  "auth": {
+    "loginTitle": "Iniciar sesión",
+    "registerTitle": "Crear cuenta",
+    "email": "Email",
+    "password": "Contraseña",
+    "fullName": "Nombre completo",
+    "login": "Entrar",
+    "register": "Registrarse",
+    "switchToRegister": "¿No tenés cuenta? Registrate",
+    "switchToLogin": "¿Ya tenés cuenta? Iniciá sesión",
+    "loggingIn": "Ingresando...",
+    "registering": "Creando cuenta..."
+  },
+  "setup": {
+    "title": "Configurar Supabase",
+    "description": "Creá un archivo .env en la raíz del proyecto con las credenciales de tu proyecto nuevo en Supabase:",
+    "restart": "Después reiniciá el servidor con npm run dev."
+  },
+  "common": {
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "confirming": "Confirmando...",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "save": "Guardar",
+    "loading": "Cargando..."
+  }
+}
