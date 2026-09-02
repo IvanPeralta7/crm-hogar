@@ -1,36 +1,57 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Minus, Plus, Share2, ShoppingCart, Cross } from 'lucide-react';
+import { Minus, Plus, ShoppingCart, Cross } from 'lucide-react';
 import { TopBar } from '../components/layout/TopBar';
 import {
   ShoppingItemForm,
   type ShoppingItemFormData,
 } from '../components/shopping/ShoppingItemForm';
 import { useAuth } from '../contexts/AuthContext';
-import { mockShoppingItems, mockShoppingList } from '../data/mockData';
+import { mockPurchasedHistory, mockShoppingItems, mockShoppingList } from '../data/mockData';
 import { isDemoMode } from '../lib/demoMode';
+import { aggregateMostPurchased } from '../lib/shoppingStats';
 import { getSupabase } from '../lib/supabaseClient';
-import type { ShoppingItem, ShoppingList, ShoppingStore } from '../types';
-
-const WEEKLY_BUDGET = 500;
-
-const FREQUENT_ITEM_KEYS = [
-  'paperTowels',
-  'coffeeBeans',
-  'dishSoap',
-  'eggs',
-  'bread',
-] as const;
+import type { MostPurchasedItem, ShoppingItem, ShoppingList, ShoppingStore } from '../types';
 
 export function ShoppingPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const [list, setList] = useState<ShoppingList | null>(null);
   const [items, setItems] = useState<ShoppingItem[]>([]);
+  const [mostPurchased, setMostPurchased] = useState<MostPurchasedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
-  const [formStore, setFormStore] = useState<ShoppingStore>('supermercado');
-  const [formDefaultName, setFormDefaultName] = useState('');
+
+  const loadMostPurchased = useCallback(async () => {
+    if (isDemoMode) {
+      setMostPurchased(aggregateMostPurchased(mockPurchasedHistory));
+      return;
+    }
+
+    const { data, error } = await getSupabase()
+      .from('shopping_items')
+      .select('name, quantity')
+      .eq('is_purchased', true);
+
+    if (error) throw error;
+
+    const aggregated = aggregateMostPurchased(
+      (data ?? []).map((row, index) => ({
+        id: String(index),
+        list_id: '',
+        name: row.name,
+        quantity: Number(row.quantity),
+        unit: 'unidad',
+        store: 'supermercado' as ShoppingStore,
+        category: 'supermercado',
+        is_purchased: true,
+        estimated_price: null,
+        added_by: '',
+        created_at: '',
+      })),
+    );
+    setMostPurchased(aggregated);
+  }, []);
 
   const loadItems = useCallback(async (listId: string) => {
     if (isDemoMode) {
@@ -54,6 +75,7 @@ export function ShoppingPage() {
       if (isDemoMode) {
         setList(mockShoppingList);
         setItems(mockShoppingItems);
+        await loadMostPurchased();
         return;
       }
 
@@ -75,12 +97,14 @@ export function ShoppingPage() {
       } else {
         setItems([]);
       }
+
+      await loadMostPurchased();
     } catch (err) {
       console.error('Error loading shopping data:', err);
     } finally {
       setLoading(false);
     }
-  }, [loadItems]);
+  }, [loadItems, loadMostPurchased]);
 
   useEffect(() => {
     void loadData();
@@ -120,12 +144,13 @@ export function ShoppingPage() {
     if (!user) throw new Error(t('shopping.errorAuth'));
 
     const activeList = await ensureActiveList();
+    const payload = { ...formData, store: 'supermercado' as ShoppingStore };
 
     if (isDemoMode) {
       const newItem: ShoppingItem = {
         id: crypto.randomUUID(),
         list_id: activeList.id,
-        ...formData,
+        ...payload,
         is_purchased: false,
         added_by: user.id,
         created_at: new Date().toISOString(),
@@ -138,7 +163,7 @@ export function ShoppingPage() {
       .from('shopping_items')
       .insert({
         list_id: activeList.id,
-        ...formData,
+        ...payload,
         added_by: user.id,
       })
       .select()
@@ -155,6 +180,9 @@ export function ShoppingPage() {
       setItems((prev) =>
         prev.map((row) => (row.id === item.id ? { ...row, is_purchased: nextValue } : row)),
       );
+      if (nextValue) {
+        setMostPurchased(aggregateMostPurchased([...mockPurchasedHistory, { ...item, is_purchased: true }]));
+      }
       return;
     }
 
@@ -167,6 +195,7 @@ export function ShoppingPage() {
     setItems((prev) =>
       prev.map((row) => (row.id === item.id ? { ...row, is_purchased: nextValue } : row)),
     );
+    await loadMostPurchased();
   };
 
   const handleQuantityChange = async (item: ShoppingItem, delta: number) => {
@@ -190,22 +219,6 @@ export function ShoppingPage() {
     );
   };
 
-  const openForm = (store: ShoppingStore = 'supermercado', defaultName = '') => {
-    setFormStore(store);
-    setFormDefaultName(defaultName);
-    setFormOpen(true);
-  };
-
-  const handleShare = async () => {
-    const url = window.location.href;
-    if (navigator.share) {
-      await navigator.share({ title: list?.name ?? t('shopping.title'), url });
-      return;
-    }
-    await navigator.clipboard.writeText(url);
-    alert(t('shopping.linkCopied'));
-  };
-
   const estimatedTotal = items.reduce(
     (sum, item) => sum + (item.estimated_price ?? 0) * item.quantity,
     0,
@@ -223,40 +236,19 @@ export function ShoppingPage() {
     return groups;
   }, [items]);
 
-  const budgetUsed = Math.min(Math.round((estimatedTotal / WEEKLY_BUDGET) * 100), 100);
-  const budgetLeft = Math.max(WEEKLY_BUDGET - estimatedTotal, 0);
+  const supermarketItems = grouped.supermercado;
 
   return (
     <>
       <TopBar title={t('shopping.title')} searchPlaceholder={t('header.searchShopping')} showSearch />
 
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">
-            {list?.name ?? t('shopping.defaultListName')}
-          </h2>
-          <p className="text-sanctuary-teal font-medium mt-1">
-            {t('shopping.estimatedTotal')}: ${estimatedTotal.toFixed(2)}
-          </p>
-        </div>
-        <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={() => void handleShare()}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-sanctuary-teal text-sanctuary-teal bg-white text-sm font-medium"
-          >
-            <Share2 size={18} />
-            {t('shopping.shareList')}
-          </button>
-          <button
-            type="button"
-            onClick={() => openForm()}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-sanctuary-teal text-white text-sm font-medium"
-          >
-            <Plus size={18} />
-            {t('shopping.addItem')}
-          </button>
-        </div>
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold text-gray-900">
+          {list?.name ?? t('shopping.defaultListName')}
+        </h2>
+        <p className="text-sanctuary-teal font-medium mt-1">
+          {t('shopping.estimatedTotal')}: ${estimatedTotal.toFixed(2)}
+        </p>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -265,65 +257,54 @@ export function ShoppingPage() {
             <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center text-gray-500">
               {t('common.loading')}
             </div>
-          ) : items.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-dashed border-gray-300 p-8 text-center">
-              <p className="text-gray-500 mb-4">{t('shopping.emptyList')}</p>
-              <button
-                type="button"
-                onClick={() => openForm()}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-sanctuary-teal text-white text-sm font-medium"
-              >
-                <Plus size={18} />
-                {t('shopping.addItem')}
-              </button>
-            </div>
           ) : (
-            (Object.keys(grouped) as ShoppingStore[]).map((store) => {
-              const storeItems = grouped[store];
-              if (storeItems.length === 0) return null;
-              return (
-                <StoreCard
-                  key={store}
-                  store={store}
-                  items={storeItems}
-                  onToggle={(item) => void handleTogglePurchased(item)}
-                  onQuantityChange={(item, delta) => void handleQuantityChange(item, delta)}
-                  onAddToStore={() => openForm(store)}
-                />
-              );
-            })
+            <>
+              <StoreCard
+                store="supermercado"
+                items={supermarketItems}
+                onToggle={(item) => void handleTogglePurchased(item)}
+                onQuantityChange={(item, delta) => void handleQuantityChange(item, delta)}
+                onAddToStore={() => setFormOpen(true)}
+                showAddButton
+              />
+              {(Object.keys(grouped) as ShoppingStore[])
+                .filter((store) => store !== 'supermercado')
+                .map((store) => {
+                  const storeItems = grouped[store];
+                  if (storeItems.length === 0) return null;
+                  return (
+                    <StoreCard
+                      key={store}
+                      store={store}
+                      items={storeItems}
+                      onToggle={(item) => void handleTogglePurchased(item)}
+                      onQuantityChange={(item, delta) => void handleQuantityChange(item, delta)}
+                      onAddToStore={() => undefined}
+                      showAddButton={false}
+                    />
+                  );
+                })}
+            </>
           )}
         </div>
 
-        <div className="space-y-4">
+        <div>
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-            <h3 className="font-semibold mb-4">{t('shopping.frequentItems')}</h3>
-            <div className="flex flex-wrap gap-2">
-              {FREQUENT_ITEM_KEYS.map((key) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => openForm('supermercado', t(`shopping.frequent.${key}`))}
-                  className="px-3 py-1.5 rounded-full border border-gray-200 text-sm hover:border-sanctuary-teal hover:text-sanctuary-teal"
-                >
-                  + {t(`shopping.frequent.${key}`)}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-sanctuary-teal rounded-2xl p-6 text-white">
-            <div className="text-sm opacity-90 mb-1">{t('shopping.budgetStatus')}</div>
-            <div className="text-2xl font-bold mb-4">
-              {t('shopping.leftThisWeek', { amount: `$${budgetLeft.toFixed(2)}` })}
-            </div>
-            <div className="h-2 bg-white/20 rounded-full overflow-hidden mb-2">
-              <div
-                className="h-full bg-sanctuary-mint rounded-full transition-all"
-                style={{ width: `${budgetUsed}%` }}
-              />
-            </div>
-            <div className="text-sm opacity-90">{t('shopping.used', { percent: budgetUsed })}</div>
+            <h3 className="font-semibold mb-4">{t('shopping.mostPurchased')}</h3>
+            {mostPurchased.length === 0 ? (
+              <p className="text-sm text-gray-500">{t('shopping.noPurchasedYet')}</p>
+            ) : (
+              <div className="space-y-3">
+                {mostPurchased.map((item) => (
+                  <div key={item.name} className="flex items-center justify-between text-sm">
+                    <span className="text-gray-800">{item.name}</span>
+                    <span className="font-medium text-sanctuary-teal">
+                      {item.totalQuantity} {t('shopping.unitsLabel')}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -332,8 +313,7 @@ export function ShoppingPage() {
         isOpen={formOpen}
         onClose={() => setFormOpen(false)}
         onSubmit={handleAddItem}
-        defaultStore={formStore}
-        defaultName={formDefaultName}
+        defaultStore="supermercado"
       />
     </>
   );
@@ -345,12 +325,14 @@ function StoreCard({
   onToggle,
   onQuantityChange,
   onAddToStore,
+  showAddButton,
 }: {
   store: ShoppingStore;
   items: ShoppingItem[];
   onToggle: (item: ShoppingItem) => void;
   onQuantityChange: (item: ShoppingItem, delta: number) => void;
   onAddToStore: () => void;
+  showAddButton: boolean;
 }) {
   const { t } = useTranslation();
   const icon =
@@ -369,53 +351,59 @@ function StoreCard({
           {t('shopping.items', { count: items.length })}
         </span>
       </div>
-      <div className="divide-y divide-gray-100">
-        {items.map((item) => (
-          <div
-            key={item.id}
-            className={`flex items-center gap-4 px-6 py-4 ${item.is_purchased ? 'opacity-60' : ''}`}
-          >
-            <input
-              type="checkbox"
-              checked={item.is_purchased}
-              onChange={() => onToggle(item)}
-              className="w-5 h-5 rounded accent-sanctuary-teal cursor-pointer"
-            />
-            <div className={`flex-1 ${item.is_purchased ? 'line-through text-gray-500' : ''}`}>
-              {item.name}
+      {items.length === 0 ? (
+        <div className="px-6 py-8 text-center text-sm text-gray-500">{t('shopping.emptyStore')}</div>
+      ) : (
+        <div className="divide-y divide-gray-100">
+          {items.map((item) => (
+            <div
+              key={item.id}
+              className={`flex items-center gap-4 px-6 py-4 ${item.is_purchased ? 'opacity-60' : ''}`}
+            >
+              <input
+                type="checkbox"
+                checked={item.is_purchased}
+                onChange={() => onToggle(item)}
+                className="w-5 h-5 rounded accent-sanctuary-teal cursor-pointer"
+              />
+              <div className={`flex-1 ${item.is_purchased ? 'line-through text-gray-500' : ''}`}>
+                {item.name}
+              </div>
+              <div className="flex items-center gap-2 border border-gray-200 rounded-lg px-2 py-1 text-sm">
+                <button
+                  type="button"
+                  onClick={() => onQuantityChange(item, -1)}
+                  className="text-gray-400 hover:text-gray-700"
+                >
+                  <Minus size={14} />
+                </button>
+                <span>{item.quantity}</span>
+                <button
+                  type="button"
+                  onClick={() => onQuantityChange(item, 1)}
+                  className="text-gray-400 hover:text-gray-700"
+                >
+                  <Plus size={14} />
+                </button>
+              </div>
+              {item.estimated_price != null && (
+                <span className="text-sm font-medium w-16 text-right">
+                  ${(item.estimated_price * item.quantity).toFixed(2)}
+                </span>
+              )}
             </div>
-            <div className="flex items-center gap-2 border border-gray-200 rounded-lg px-2 py-1 text-sm">
-              <button
-                type="button"
-                onClick={() => onQuantityChange(item, -1)}
-                className="text-gray-400 hover:text-gray-700"
-              >
-                <Minus size={14} />
-              </button>
-              <span>{item.quantity}</span>
-              <button
-                type="button"
-                onClick={() => onQuantityChange(item, 1)}
-                className="text-gray-400 hover:text-gray-700"
-              >
-                <Plus size={14} />
-              </button>
-            </div>
-            {item.estimated_price != null && (
-              <span className="text-sm font-medium w-16 text-right">
-                ${(item.estimated_price * item.quantity).toFixed(2)}
-              </span>
-            )}
-          </div>
-        ))}
-      </div>
-      <button
-        type="button"
-        onClick={onAddToStore}
-        className="w-full py-3 text-sm text-sanctuary-teal border-t border-dashed border-gray-200 hover:bg-gray-50"
-      >
-        + {t('shopping.addToStore', { store: t(`shopping.store.${store}`) })}
-      </button>
+          ))}
+        </div>
+      )}
+      {showAddButton && (
+        <button
+          type="button"
+          onClick={onAddToStore}
+          className="w-full py-3 text-sm text-sanctuary-teal border-t border-dashed border-gray-200 hover:bg-gray-50"
+        >
+          + {t('shopping.addToStore', { store: t(`shopping.store.${store}`) })}
+        </button>
+      )}
     </div>
   );
 }

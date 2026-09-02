@@ -5,7 +5,6 @@ import {
   CheckSquare,
   ShoppingCart,
   Wallet,
-  Plus,
   LogOut,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -56,14 +55,7 @@ export function Sidebar() {
           })}
         </nav>
 
-        <div className="p-4 space-y-2">
-          <button
-            type="button"
-            className="w-full flex items-center justify-center gap-2 bg-sanctuary-teal text-white rounded-xl py-3 text-sm font-medium hover:bg-sanctuary-teal-dark transition-colors"
-          >
-            <Plus size={18} />
-            {t('nav.addNew')}
-          </button>
+        <div className="p-4">
           <button
             type="button"
             onClick={() => void signOut()}

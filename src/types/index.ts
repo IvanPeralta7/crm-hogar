@@ -41,10 +41,21 @@ export const EXPENSE_CATEGORIES: ExpenseCategory[] = [
   'mantenimiento',
 ];
 
-export type TaskStatus = 'pendiente' | 'en_progreso' | 'completada';
-export type TaskPriority = 'alta' | 'media' | 'baja';
-export type TaskCategory = 'limpieza' | 'cocina' | 'jardin' | 'mascotas' | 'finanzas' | 'exterior';
-export type TaskRecurrence = 'diaria' | 'semanal' | 'mensual';
+export type TaskStatus = 'pendiente' | 'completada';
+export type TaskCriticality = 'urgente' | 'prioritaria' | 'pateable';
+
+export const TASK_CATEGORIES = [
+  'hogar',
+  'compras',
+  'tramites',
+  'aviva',
+  'bebi',
+  'personales_ivan',
+  'personales_juli',
+  'trabajo_ivan',
+] as const;
+
+export type TaskCategory = (typeof TASK_CATEGORIES)[number];
 
 export interface Profile {
   id: string;
@@ -58,16 +69,23 @@ export interface Task {
   title: string;
   description: string | null;
   status: TaskStatus;
-  priority: TaskPriority;
+  priority: TaskCriticality;
   category: TaskCategory;
-  assigned_to: string | null;
-  due_date: string | null;
-  is_recurring: boolean;
-  recurrence: TaskRecurrence | null;
+  start_date: string | null;
+  end_date: string | null;
   created_by: string;
   created_at: string;
   updated_at: string;
-  assignee?: Profile | null;
+}
+
+export interface TaskFormData {
+  title: string;
+  description: string;
+  start_date: string;
+  end_date: string;
+  category: TaskCategory;
+  priority: TaskCriticality;
+  status: TaskStatus;
 }
 
 export type ShoppingListStatus = 'activa' | 'completada';
@@ -93,4 +111,9 @@ export interface ShoppingItem {
   estimated_price: number | null;
   added_by: string;
   created_at: string;
+}
+
+export interface MostPurchasedItem {
+  name: string;
+  totalQuantity: number;
 }

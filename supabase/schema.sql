@@ -61,13 +61,14 @@ create table if not exists public.tasks (
   id uuid primary key default gen_random_uuid(),
   title text not null,
   description text,
-  status text not null default 'pendiente' check (status in ('pendiente', 'en_progreso', 'completada')),
-  priority text not null default 'media' check (priority in ('alta', 'media', 'baja')),
-  category text not null default 'limpieza' check (category in ('limpieza', 'cocina', 'jardin', 'mascotas', 'finanzas', 'exterior')),
-  assigned_to uuid references public.profiles (id) on delete set null,
-  due_date date,
-  is_recurring boolean not null default false,
-  recurrence text check (recurrence is null or recurrence in ('diaria', 'semanal', 'mensual')),
+  status text not null default 'pendiente' check (status in ('pendiente', 'completada')),
+  priority text not null default 'prioritaria' check (priority in ('urgente', 'prioritaria', 'pateable')),
+  category text not null default 'hogar' check (category in (
+    'hogar', 'compras', 'tramites', 'aviva', 'bebi',
+    'personales_ivan', 'personales_juli', 'trabajo_ivan'
+  )),
+  start_date date,
+  end_date date,
   created_by uuid not null references public.profiles (id) on delete cascade,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -128,3 +129,15 @@ create trigger tasks_updated_at before update on public.tasks
 
 create trigger expenses_updated_at before update on public.expenses
   for each row execute function public.set_updated_at();
+
+create or replace view public.most_purchased_items as
+select
+  lower(trim(name)) as name_key,
+  min(name) as name,
+  sum(quantity)::numeric as total_quantity
+from public.shopping_items
+where is_purchased = true
+group by lower(trim(name))
+order by total_quantity desc;
+
+grant select on public.most_purchased_items to authenticated;

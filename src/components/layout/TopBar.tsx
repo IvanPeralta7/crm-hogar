@@ -1,7 +1,6 @@
-import { Bell, Globe, Settings, User } from 'lucide-react';
+import { Globe } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { setAppLanguage } from '../../i18n';
-import { useAuth } from '../../contexts/AuthContext';
 
 interface TopBarProps {
   title: string;
@@ -11,7 +10,6 @@ interface TopBarProps {
 
 export function TopBar({ title, searchPlaceholder, showSearch = false }: TopBarProps) {
   const { t, i18n } = useTranslation();
-  const { profile } = useAuth();
   const currentLang = i18n.language.startsWith('en') ? 'en' : 'es';
 
   return (
@@ -37,23 +35,6 @@ export function TopBar({ title, searchPlaceholder, showSearch = false }: TopBarP
         >
           <Globe size={20} />
         </button>
-
-        <button type="button" className="p-2 rounded-full hover:bg-white/80 text-gray-600 relative">
-          <Bell size={20} />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
-        </button>
-
-        <button type="button" className="p-2 rounded-full hover:bg-white/80 text-gray-600">
-          <Settings size={20} />
-        </button>
-
-        <div className="w-9 h-9 rounded-full bg-sanctuary-teal/20 flex items-center justify-center overflow-hidden">
-          {profile?.avatar_url ? (
-            <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
-          ) : (
-            <User size={18} className="text-sanctuary-teal" />
-          )}
-        </div>
       </div>
     </header>
   );
