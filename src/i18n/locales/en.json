@@ -68,6 +68,7 @@
   },
   "shopping": {
     "title": "Shopping Lists",
+    "defaultListName": "Weekly restock",
     "estimatedTotal": "Estimated Total",
     "shareList": "Share List",
     "addItem": "Add Item",
@@ -77,6 +78,32 @@
     "budgetStatus": "Budget Status",
     "leftThisWeek": "{{amount}} left this week",
     "used": "{{percent}}% used",
+    "emptyList": "Your list is empty. Add the first item.",
+    "formTitle": "Add item",
+    "nameLabel": "Name",
+    "namePlaceholder": "E.g. Milk",
+    "quantityLabel": "Quantity",
+    "unitLabel": "Unit",
+    "storeLabel": "Store",
+    "categoryLabel": "Category",
+    "priceLabel": "Estimated price ($)",
+    "saveItem": "Add",
+    "saving": "Saving...",
+    "errorSave": "Could not save item",
+    "errorAuth": "You must sign in to add items",
+    "linkCopied": "Link copied to clipboard",
+    "units": {
+      "unidad": "Unit",
+      "kg": "Kg",
+      "litro": "Liter"
+    },
+    "frequent": {
+      "paperTowels": "Paper towels",
+      "coffeeBeans": "Coffee beans",
+      "dishSoap": "Dish soap",
+      "eggs": "Eggs",
+      "bread": "Bread"
+    },
     "store": {
       "supermercado": "Supermarket",
       "farmacia": "Pharmacy",

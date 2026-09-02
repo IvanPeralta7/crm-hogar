@@ -68,6 +68,7 @@
   },
   "shopping": {
     "title": "Listas de compras",
+    "defaultListName": "Reposición semanal",
     "estimatedTotal": "Total estimado",
     "shareList": "Compartir lista",
     "addItem": "Agregar item",
@@ -77,6 +78,32 @@
     "budgetStatus": "Estado del presupuesto",
     "leftThisWeek": "{{amount}} restantes esta semana",
     "used": "{{percent}}% usado",
+    "emptyList": "Tu lista está vacía. Agregá el primer item.",
+    "formTitle": "Agregar item",
+    "nameLabel": "Nombre",
+    "namePlaceholder": "Ej: Leche",
+    "quantityLabel": "Cantidad",
+    "unitLabel": "Unidad",
+    "storeLabel": "Tienda",
+    "categoryLabel": "Categoría",
+    "priceLabel": "Precio estimado ($)",
+    "saveItem": "Agregar",
+    "saving": "Guardando...",
+    "errorSave": "No se pudo guardar el item",
+    "errorAuth": "Tenés que iniciar sesión para agregar items",
+    "linkCopied": "Enlace copiado al portapapeles",
+    "units": {
+      "unidad": "Unidad",
+      "kg": "Kg",
+      "litro": "Litro"
+    },
+    "frequent": {
+      "paperTowels": "Papel de cocina",
+      "coffeeBeans": "Café",
+      "dishSoap": "Detergente",
+      "eggs": "Huevos",
+      "bread": "Pan"
+    },
     "store": {
       "supermercado": "Supermercado",
       "farmacia": "Farmacia",

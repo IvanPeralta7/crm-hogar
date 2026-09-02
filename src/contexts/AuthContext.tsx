@@ -83,19 +83,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [fetchProfile]);
 
   const signIn = useCallback(async (email: string, password: string) => {
-    const { error } = await getSupabase().auth.signInWithPassword({ email, password });
-    return { error: error?.message ?? null };
+    try {
+      const { error } = await getSupabase().auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+      return { error: error?.message ?? null };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Error de conexion';
+      if (message.includes('ISO-8859-1')) {
+        return {
+          error:
+            'Credenciales de Supabase invalidas en el servidor. Revisá VITE_SUPABASE_ANON_KEY en Vercel y volvé a desplegar.',
+        };
+      }
+      return { error: message };
+    }
   }, []);
 
   const signUp = useCallback(async (email: string, password: string, fullName: string) => {
-    const { error } = await getSupabase().auth.signUp({
-      email,
-      password,
-      options: {
-        data: { full_name: fullName },
-      },
-    });
-    return { error: error?.message ?? null };
+    try {
+      const { error } = await getSupabase().auth.signUp({
+        email: email.trim(),
+        password,
+        options: {
+          data: { full_name: fullName.trim() },
+        },
+      });
+      return { error: error?.message ?? null };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Error de conexion';
+      if (message.includes('ISO-8859-1')) {
+        return {
+          error:
+            'Credenciales de Supabase invalidas en el servidor. Revisá VITE_SUPABASE_ANON_KEY en Vercel y volvé a desplegar.',
+        };
+      }
+      return { error: message };
+    }
   }, []);
 
   const signOut = useCallback(async () => {
