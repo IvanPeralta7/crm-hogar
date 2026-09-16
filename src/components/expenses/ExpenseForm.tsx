@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { getSupabase } from '../../lib/supabaseClient';
+import { todayLocalDateString } from '../../lib/dates';
 import { EXPENSE_CATEGORIES, type ExpenseCategory } from '../../types';
 import { Plus } from 'lucide-react';
 
@@ -14,7 +15,7 @@ export function ExpenseForm({ onSuccess }: ExpenseFormProps) {
   const { user } = useAuth();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(todayLocalDateString());
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState<ExpenseCategory>('supermercado');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -42,7 +43,7 @@ export function ExpenseForm({ onSuccess }: ExpenseFormProps) {
       setMessage({ type: 'success', text: t('expenses.success') });
       setTitle('');
       setDescription('');
-      setDate(new Date().toISOString().split('T')[0]);
+      setDate(todayLocalDateString());
       setAmount('');
       setCategory('supermercado');
       onSuccess?.();

@@ -125,7 +125,19 @@
       "supermercado": "Supermercado",
       "farmacia": "Farmacia",
       "otros": "Otros"
-    }
+    },
+    "currentList": "Lista actual",
+    "pastLists": "Listas anteriores",
+    "viewList": "Ver listas guardadas",
+    "newList": "Nueva lista",
+    "newListHint": "Guarda la lista actual y comienza una nueva",
+    "listDate": "Fecha de la lista",
+    "totalSpent": "Total gastado",
+    "totalSpentPlaceholder": "Completar al finalizar la compra",
+    "saveTotal": "Guardar total",
+    "totalSaved": "Total guardado",
+    "readOnlyList": "Lista archivada (solo lectura)",
+    "noPastLists": "No hay listas anteriores guardadas"
   },
   "expenses": {
     "title": "Gastos",
@@ -148,6 +160,12 @@
     "saving": "Guardando...",
     "success": "Gasto registrado exitosamente",
     "error": "Error al registrar el gasto",
+    "deleteConfirm": "¿Eliminar este gasto?",
+    "currentMonthTitle": "Gastos del mes en curso",
+    "viewByMonth": "Ver gastos por mes",
+    "historyTitle": "Gastos por mes",
+    "noPastMonths": "No hay meses anteriores con gastos",
+    "monthTotal": "Total del mes",
     "categories": {
       "supermercado": "Supermercado",
       "carniceria": "Carnicería",

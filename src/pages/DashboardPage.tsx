@@ -7,6 +7,7 @@ import { getSupabase } from '../lib/supabaseClient';
 import { isDemoMode } from '../lib/demoMode';
 import { mockExpenses, mockShoppingItems, mockTasks } from '../data/mockData';
 import { getTimeGreetingKey } from '../lib/getTimeGreeting';
+import { getCurrentMonthKey, getMonthRange } from '../lib/dates';
 import type { Expense, ExpenseCategory, Task } from '../types';
 
 const CHART_COLORS = ['#006D6D', '#4CAF93', '#A78BFA'];
@@ -22,15 +23,14 @@ export function DashboardPage() {
     async function load() {
       if (isDemoMode) {
         setTasks(mockTasks.filter((task) => task.status !== 'completada'));
-        setExpenses(mockExpenses);
+        setExpenses(mockExpenses.filter((e) => e.date.startsWith(getCurrentMonthKey())));
         setShoppingCount(mockShoppingItems.filter((item) => !item.is_purchased).length);
         setListCount(1);
         return;
       }
 
       const supabase = getSupabase();
-      const now = new Date();
-      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+      const { start: monthStart, end: monthEnd } = getMonthRange(getCurrentMonthKey());
 
       const [tasksRes, expensesRes, itemsRes, listsRes] = await Promise.all([
         supabase
@@ -39,7 +39,7 @@ export function DashboardPage() {
           .neq('status', 'completada')
           .order('end_date', { ascending: true })
           .limit(5),
-        supabase.from('expenses').select('*').gte('date', monthStart),
+        supabase.from('expenses').select('*').gte('date', monthStart).lte('date', monthEnd),
         supabase.from('shopping_items').select('id').eq('is_purchased', false),
         supabase.from('shopping_lists').select('id').eq('status', 'activa'),
       ]);

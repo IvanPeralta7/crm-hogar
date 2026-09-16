@@ -1,7 +1,8 @@
 import type { Expense, ShoppingItem, ShoppingList, Task } from '../types';
+import { todayLocalDateString } from '../lib/dates';
 
 const demoUserId = '00000000-0000-0000-0000-000000000001';
-const today = new Date().toISOString().split('T')[0];
+const today = todayLocalDateString();
 
 export const mockProfile = {
   id: demoUserId,
@@ -78,13 +79,27 @@ export const mockTasks: Task[] = [
   },
 ];
 
+export const mockArchivedShoppingList: ShoppingList = {
+  id: 'list-archived',
+  name: 'Compra anterior',
+  status: 'completada',
+  list_date: '2025-08-15',
+  total_spent: 12500,
+  created_by: demoUserId,
+  created_at: new Date().toISOString(),
+};
+
 export const mockShoppingList: ShoppingList = {
   id: 'list-1',
   name: 'Reposición semanal',
   status: 'activa',
+  list_date: today,
+  total_spent: null,
   created_by: demoUserId,
   created_at: new Date().toISOString(),
 };
+
+export const mockShoppingLists: ShoppingList[] = [mockShoppingList, mockArchivedShoppingList];
 
 export const mockShoppingItems: ShoppingItem[] = [
   {
@@ -152,6 +167,19 @@ export const mockShoppingItems: ShoppingItem[] = [
     added_by: demoUserId,
     created_at: new Date().toISOString(),
   },
+  {
+    id: 'si-arch-1',
+    list_id: 'list-archived',
+    name: 'Arroz y fideos',
+    quantity: 2,
+    unit: 'unidad',
+    store: 'supermercado',
+    category: 'supermercado',
+    is_purchased: true,
+    estimated_price: 3.5,
+    added_by: demoUserId,
+    created_at: new Date().toISOString(),
+  },
 ];
 
 export const mockPurchasedHistory: ShoppingItem[] = [
@@ -214,6 +242,22 @@ export const mockExpenses: Expense[] = [
     date: today,
     amount: 211.25,
     category: 'mantenimiento',
+    user_id: demoUserId,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'e-prev',
+    title: 'Carnicería',
+    description: '',
+    date: (() => {
+      const d = new Date();
+      d.setMonth(d.getMonth() - 1);
+      d.setDate(10);
+      return todayLocalDateString(d);
+    })(),
+    amount: 420,
+    category: 'carniceria',
     user_id: demoUserId,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),

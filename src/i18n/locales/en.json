@@ -125,7 +125,19 @@
       "supermercado": "Supermarket",
       "farmacia": "Pharmacy",
       "otros": "Other"
-    }
+    },
+    "currentList": "Current list",
+    "pastLists": "Past lists",
+    "viewList": "Browse saved lists",
+    "newList": "New list",
+    "newListHint": "Save the current list and start a new one",
+    "listDate": "List date",
+    "totalSpent": "Total spent",
+    "totalSpentPlaceholder": "Fill in after shopping",
+    "saveTotal": "Save total",
+    "totalSaved": "Total saved",
+    "readOnlyList": "Archived list (read only)",
+    "noPastLists": "No saved lists yet"
   },
   "expenses": {
     "title": "Expenses",
@@ -148,6 +160,12 @@
     "saving": "Saving...",
     "success": "Expense registered successfully",
     "error": "Error registering expense",
+    "deleteConfirm": "Delete this expense?",
+    "currentMonthTitle": "Current month expenses",
+    "viewByMonth": "View expenses by month",
+    "historyTitle": "Expenses by month",
+    "noPastMonths": "No previous months with expenses",
+    "monthTotal": "Month total",
     "categories": {
       "supermercado": "Supermarket",
       "carniceria": "Butcher",

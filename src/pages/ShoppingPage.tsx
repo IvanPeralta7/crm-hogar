@@ -1,26 +1,62 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Minus, Plus, ShoppingCart, Cross } from 'lucide-react';
+import { Archive, Minus, Plus, ShoppingCart, Cross, Save } from 'lucide-react';
 import { TopBar } from '../components/layout/TopBar';
 import {
   ShoppingItemForm,
   type ShoppingItemFormData,
 } from '../components/shopping/ShoppingItemForm';
 import { useAuth } from '../contexts/AuthContext';
-import { mockPurchasedHistory, mockShoppingItems, mockShoppingList } from '../data/mockData';
+import {
+  mockPurchasedHistory,
+  mockShoppingItems,
+  mockShoppingList,
+  mockShoppingLists,
+} from '../data/mockData';
+import { formatLocalDate, todayLocalDateString } from '../lib/dates';
 import { isDemoMode } from '../lib/demoMode';
 import { aggregateMostPurchased } from '../lib/shoppingStats';
 import { getSupabase } from '../lib/supabaseClient';
 import type { MostPurchasedItem, ShoppingItem, ShoppingList, ShoppingStore } from '../types';
 
+type DemoListsState = {
+  lists: ShoppingList[];
+  items: ShoppingItem[];
+};
+
+let demoListsState: DemoListsState = {
+  lists: [...mockShoppingLists],
+  items: [...mockShoppingItems],
+};
+
 export function ShoppingPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language.startsWith('en') ? 'en-US' : 'es-AR';
   const { user } = useAuth();
-  const [list, setList] = useState<ShoppingList | null>(null);
+  const [activeList, setActiveList] = useState<ShoppingList | null>(null);
+  const [archivedLists, setArchivedLists] = useState<ShoppingList[]>([]);
+  const [viewListId, setViewListId] = useState<string | 'active'>('active');
   const [items, setItems] = useState<ShoppingItem[]>([]);
   const [mostPurchased, setMostPurchased] = useState<MostPurchasedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
+  const [totalSpentInput, setTotalSpentInput] = useState('');
+  const [savingTotal, setSavingTotal] = useState(false);
+
+  const viewingList = useMemo(() => {
+    if (viewListId === 'active') return activeList;
+    return archivedLists.find((row) => row.id === viewListId) ?? activeList;
+  }, [activeList, archivedLists, viewListId]);
+
+  const isReadOnly = viewingList?.status === 'completada';
+
+  useEffect(() => {
+    if (viewingList) {
+      setTotalSpentInput(
+        viewingList.total_spent != null ? String(viewingList.total_spent) : '',
+      );
+    }
+  }, [viewingList?.id, viewingList?.total_spent]);
 
   const loadMostPurchased = useCallback(async () => {
     if (isDemoMode) {
@@ -55,7 +91,7 @@ export function ShoppingPage() {
 
   const loadItems = useCallback(async (listId: string) => {
     if (isDemoMode) {
-      setItems(mockShoppingItems.filter((item) => item.list_id === listId));
+      setItems(demoListsState.items.filter((item) => item.list_id === listId));
       return;
     }
 
@@ -69,31 +105,50 @@ export function ShoppingPage() {
     setItems(data ?? []);
   }, []);
 
+  const loadLists = useCallback(async () => {
+    if (isDemoMode) {
+      const active = demoListsState.lists.find((row) => row.status === 'activa') ?? null;
+      const archived = demoListsState.lists
+        .filter((row) => row.status === 'completada')
+        .sort((a, b) => b.list_date.localeCompare(a.list_date));
+      setActiveList(active);
+      setArchivedLists(archived);
+      return active;
+    }
+
+    const supabase = getSupabase();
+    const { data: activeRows, error: activeError } = await supabase
+      .from('shopping_lists')
+      .select('*')
+      .eq('status', 'activa')
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    if (activeError) throw activeError;
+
+    const { data: archivedRows, error: archivedError } = await supabase
+      .from('shopping_lists')
+      .select('*')
+      .eq('status', 'completada')
+      .order('list_date', { ascending: false });
+
+    if (archivedError) throw archivedError;
+
+    const active = activeRows?.[0] ?? null;
+    setActiveList(active);
+    setArchivedLists(archivedRows ?? []);
+    return active;
+  }, []);
+
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      if (isDemoMode) {
-        setList(mockShoppingList);
-        setItems(mockShoppingItems);
-        await loadMostPurchased();
-        return;
-      }
+      const active = await loadLists();
+      const listId =
+        viewListId === 'active' ? active?.id : viewListId !== 'active' ? viewListId : active?.id;
 
-      const supabase = getSupabase();
-      const { data: lists, error } = await supabase
-        .from('shopping_lists')
-        .select('*')
-        .eq('status', 'activa')
-        .order('created_at', { ascending: false })
-        .limit(1);
-
-      if (error) throw error;
-
-      const activeList = lists?.[0] ?? null;
-      setList(activeList);
-
-      if (activeList) {
-        await loadItems(activeList.id);
+      if (listId) {
+        await loadItems(listId);
       } else {
         setItems([]);
       }
@@ -104,24 +159,35 @@ export function ShoppingPage() {
     } finally {
       setLoading(false);
     }
-  }, [loadItems, loadMostPurchased]);
+  }, [loadItems, loadLists, loadMostPurchased, viewListId]);
 
   useEffect(() => {
     void loadData();
   }, [loadData]);
 
+  useEffect(() => {
+    if (!viewingList?.id) return;
+    void loadItems(viewingList.id);
+  }, [viewingList?.id, loadItems]);
+
   const ensureActiveList = useCallback(async (): Promise<ShoppingList> => {
-    if (list) return list;
+    if (activeList) return activeList;
     if (!user) throw new Error(t('shopping.errorAuth'));
+
+    const listDate = todayLocalDateString();
 
     if (isDemoMode) {
       const demoList: ShoppingList = {
         ...mockShoppingList,
         id: crypto.randomUUID(),
+        list_date: listDate,
+        total_spent: null,
         created_by: user.id,
         created_at: new Date().toISOString(),
       };
-      setList(demoList);
+      demoListsState.lists = [demoList, ...demoListsState.lists.filter((l) => l.status !== 'activa')];
+      setActiveList(demoList);
+      setViewListId('active');
       return demoList;
     }
 
@@ -130,31 +196,36 @@ export function ShoppingPage() {
       .insert({
         name: t('shopping.defaultListName'),
         status: 'activa',
+        list_date: listDate,
+        total_spent: null,
         created_by: user.id,
       })
       .select()
       .single();
 
     if (error) throw error;
-    setList(data);
+    setActiveList(data);
+    setViewListId('active');
     return data;
-  }, [list, user, t]);
+  }, [activeList, user, t]);
 
   const handleAddItem = async (formData: ShoppingItemFormData) => {
     if (!user) throw new Error(t('shopping.errorAuth'));
+    if (isReadOnly) return;
 
-    const activeList = await ensureActiveList();
+    const list = await ensureActiveList();
     const payload = { ...formData, store: 'supermercado' as ShoppingStore };
 
     if (isDemoMode) {
       const newItem: ShoppingItem = {
         id: crypto.randomUUID(),
-        list_id: activeList.id,
+        list_id: list.id,
         ...payload,
         is_purchased: false,
         added_by: user.id,
         created_at: new Date().toISOString(),
       };
+      demoListsState.items = [...demoListsState.items, newItem];
       setItems((prev) => [...prev, newItem]);
       return;
     }
@@ -162,7 +233,7 @@ export function ShoppingPage() {
     const { data, error } = await getSupabase()
       .from('shopping_items')
       .insert({
-        list_id: activeList.id,
+        list_id: list.id,
         ...payload,
         added_by: user.id,
       })
@@ -174,14 +245,20 @@ export function ShoppingPage() {
   };
 
   const handleTogglePurchased = async (item: ShoppingItem) => {
+    if (isReadOnly) return;
     const nextValue = !item.is_purchased;
 
     if (isDemoMode) {
+      demoListsState.items = demoListsState.items.map((row) =>
+        row.id === item.id ? { ...row, is_purchased: nextValue } : row,
+      );
       setItems((prev) =>
         prev.map((row) => (row.id === item.id ? { ...row, is_purchased: nextValue } : row)),
       );
       if (nextValue) {
-        setMostPurchased(aggregateMostPurchased([...mockPurchasedHistory, { ...item, is_purchased: true }]));
+        setMostPurchased(
+          aggregateMostPurchased([...mockPurchasedHistory, { ...item, is_purchased: true }]),
+        );
       }
       return;
     }
@@ -199,9 +276,13 @@ export function ShoppingPage() {
   };
 
   const handleQuantityChange = async (item: ShoppingItem, delta: number) => {
+    if (isReadOnly) return;
     const nextQuantity = Math.max(Number(item.quantity) + delta, 0.01);
 
     if (isDemoMode) {
+      demoListsState.items = demoListsState.items.map((row) =>
+        row.id === item.id ? { ...row, quantity: nextQuantity } : row,
+      );
       setItems((prev) =>
         prev.map((row) => (row.id === item.id ? { ...row, quantity: nextQuantity } : row)),
       );
@@ -217,6 +298,112 @@ export function ShoppingPage() {
     setItems((prev) =>
       prev.map((row) => (row.id === item.id ? { ...row, quantity: nextQuantity } : row)),
     );
+  };
+
+  const handleSaveTotalSpent = async () => {
+    if (!viewingList || !user) return;
+    const parsed = totalSpentInput.trim() === '' ? null : parseFloat(totalSpentInput);
+    if (parsed != null && Number.isNaN(parsed)) return;
+
+    setSavingTotal(true);
+    try {
+      if (isDemoMode) {
+        demoListsState.lists = demoListsState.lists.map((row) =>
+          row.id === viewingList.id ? { ...row, total_spent: parsed } : row,
+        );
+        if (viewingList.id === activeList?.id) {
+          setActiveList((prev) => (prev ? { ...prev, total_spent: parsed } : prev));
+        } else {
+          setArchivedLists((prev) =>
+            prev.map((row) => (row.id === viewingList.id ? { ...row, total_spent: parsed } : row)),
+          );
+        }
+        return;
+      }
+
+      const { data, error } = await getSupabase()
+        .from('shopping_lists')
+        .update({ total_spent: parsed })
+        .eq('id', viewingList.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      if (data.status === 'activa') {
+        setActiveList(data);
+      } else {
+        setArchivedLists((prev) => prev.map((row) => (row.id === data.id ? data : row)));
+      }
+    } catch (err) {
+      console.error('Error saving total:', err);
+    } finally {
+      setSavingTotal(false);
+    }
+  };
+
+  const handleNewList = async () => {
+    if (!user) return;
+
+    const listDate = todayLocalDateString();
+
+    try {
+      if (isDemoMode) {
+        if (activeList) {
+          demoListsState.lists = demoListsState.lists.map((row) =>
+            row.id === activeList.id ? { ...row, status: 'completada' as const } : row,
+          );
+        }
+        const newList: ShoppingList = {
+          id: crypto.randomUUID(),
+          name: t('shopping.defaultListName'),
+          status: 'activa',
+          list_date: listDate,
+          total_spent: null,
+          created_by: user.id,
+          created_at: new Date().toISOString(),
+        };
+        demoListsState.lists = [newList, ...demoListsState.lists];
+        setViewListId('active');
+        await loadLists();
+        await loadItems(newList.id);
+        return;
+      }
+
+      if (activeList) {
+        const { error } = await getSupabase()
+          .from('shopping_lists')
+          .update({ status: 'completada' })
+          .eq('id', activeList.id);
+        if (error) throw error;
+      }
+
+      const { data, error } = await getSupabase()
+        .from('shopping_lists')
+        .insert({
+          name: t('shopping.defaultListName'),
+          status: 'activa',
+          list_date: listDate,
+          total_spent: null,
+          created_by: user.id,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setViewListId('active');
+      setActiveList(data);
+      setItems([]);
+      const archived = await getSupabase()
+        .from('shopping_lists')
+        .select('*')
+        .eq('status', 'completada')
+        .order('list_date', { ascending: false });
+      if (!archived.error) setArchivedLists(archived.data ?? []);
+    } catch (err) {
+      console.error('Error creating new list:', err);
+    }
   };
 
   const estimatedTotal = items.reduce(
@@ -238,17 +425,90 @@ export function ShoppingPage() {
 
   const supermarketItems = grouped.supermercado;
 
+  const listSelectorValue = viewListId === 'active' ? 'active' : viewListId;
+
   return (
     <>
       <TopBar title={t('shopping.title')} searchPlaceholder={t('header.searchShopping')} showSearch />
 
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900">
-          {list?.name ?? t('shopping.defaultListName')}
-        </h2>
-        <p className="text-sanctuary-teal font-medium mt-1">
-          {t('shopping.estimatedTotal')}: ${estimatedTotal.toFixed(2)}
-        </p>
+      <div className="mb-6 flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">
+            {viewingList?.name ?? t('shopping.defaultListName')}
+          </h2>
+          {viewingList?.list_date && (
+            <p className="text-sm text-gray-500 mt-1">
+              {t('shopping.listDate')}: {formatLocalDate(viewingList.list_date, locale)}
+            </p>
+          )}
+          {isReadOnly && (
+            <p className="text-xs text-amber-700 mt-1">{t('shopping.readOnlyList')}</p>
+          )}
+          <p className="text-sanctuary-teal font-medium mt-1">
+            {t('shopping.estimatedTotal')}: ${estimatedTotal.toFixed(2)}
+          </p>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-2 flex-wrap">
+          <select
+            value={listSelectorValue}
+            onChange={(e) => {
+              const value = e.target.value;
+              setViewListId(value === 'active' ? 'active' : value);
+            }}
+            className="field-input min-w-[220px]"
+            aria-label={t('shopping.viewList')}
+          >
+            <option value="active">{t('shopping.currentList')}</option>
+            {archivedLists.length > 0 && (
+              <optgroup label={t('shopping.pastLists')}>
+                {archivedLists.map((row) => (
+                  <option key={row.id} value={row.id}>
+                    {formatLocalDate(row.list_date, locale)} — {row.name}
+                  </option>
+                ))}
+              </optgroup>
+            )}
+          </select>
+
+          {viewListId === 'active' && (
+            <button
+              type="button"
+              onClick={() => void handleNewList()}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-sanctuary-teal text-white text-sm font-medium"
+              title={t('shopping.newListHint')}
+            >
+              <Archive size={18} />
+              {t('shopping.newList')}
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="mb-6 bg-white rounded-2xl border border-gray-100 p-4 flex flex-col sm:flex-row sm:items-end gap-3">
+        <div className="flex-1">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            {t('shopping.totalSpent')}
+          </label>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value={totalSpentInput}
+            onChange={(e) => setTotalSpentInput(e.target.value)}
+            placeholder={t('shopping.totalSpentPlaceholder')}
+            className="field-input max-w-xs"
+          />
+        </div>
+        <button
+          type="button"
+          disabled={savingTotal || !viewingList}
+          onClick={() => void handleSaveTotalSpent()}
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-sanctuary-teal text-sanctuary-teal text-sm font-medium disabled:opacity-50"
+        >
+          <Save size={18} />
+          {savingTotal ? t('shopping.saving') : t('shopping.saveTotal')}
+        </button>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -262,10 +522,11 @@ export function ShoppingPage() {
               <StoreCard
                 store="supermercado"
                 items={supermarketItems}
+                readOnly={isReadOnly}
                 onToggle={(item) => void handleTogglePurchased(item)}
                 onQuantityChange={(item, delta) => void handleQuantityChange(item, delta)}
                 onAddToStore={() => setFormOpen(true)}
-                showAddButton
+                showAddButton={!isReadOnly}
               />
               {(Object.keys(grouped) as ShoppingStore[])
                 .filter((store) => store !== 'supermercado')
@@ -277,6 +538,7 @@ export function ShoppingPage() {
                       key={store}
                       store={store}
                       items={storeItems}
+                      readOnly={isReadOnly}
                       onToggle={(item) => void handleTogglePurchased(item)}
                       onQuantityChange={(item, delta) => void handleQuantityChange(item, delta)}
                       onAddToStore={() => undefined}
@@ -322,6 +584,7 @@ export function ShoppingPage() {
 function StoreCard({
   store,
   items,
+  readOnly,
   onToggle,
   onQuantityChange,
   onAddToStore,
@@ -329,6 +592,7 @@ function StoreCard({
 }: {
   store: ShoppingStore;
   items: ShoppingItem[];
+  readOnly: boolean;
   onToggle: (item: ShoppingItem) => void;
   onQuantityChange: (item: ShoppingItem, delta: number) => void;
   onAddToStore: () => void;
@@ -363,8 +627,9 @@ function StoreCard({
               <input
                 type="checkbox"
                 checked={item.is_purchased}
+                disabled={readOnly}
                 onChange={() => onToggle(item)}
-                className="w-5 h-5 rounded accent-sanctuary-teal cursor-pointer"
+                className="w-5 h-5 rounded accent-sanctuary-teal cursor-pointer disabled:cursor-not-allowed"
               />
               <div className={`flex-1 ${item.is_purchased ? 'line-through text-gray-500' : ''}`}>
                 {item.name}
@@ -372,16 +637,18 @@ function StoreCard({
               <div className="flex items-center gap-2 border border-gray-200 rounded-lg px-2 py-1 text-sm">
                 <button
                   type="button"
+                  disabled={readOnly}
                   onClick={() => onQuantityChange(item, -1)}
-                  className="text-gray-400 hover:text-gray-700"
+                  className="text-gray-400 hover:text-gray-700 disabled:opacity-40"
                 >
                   <Minus size={14} />
                 </button>
                 <span>{item.quantity}</span>
                 <button
                   type="button"
+                  disabled={readOnly}
                   onClick={() => onQuantityChange(item, 1)}
-                  className="text-gray-400 hover:text-gray-700"
+                  className="text-gray-400 hover:text-gray-700 disabled:opacity-40"
                 >
                   <Plus size={14} />
                 </button>

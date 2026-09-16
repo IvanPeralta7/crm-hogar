@@ -95,6 +95,8 @@ export interface ShoppingList {
   id: string;
   name: string;
   status: ShoppingListStatus;
+  list_date: string;
+  total_spent: number | null;
   created_by: string;
   created_at: string;
 }

@@ -84,6 +84,8 @@ create table if not exists public.shopping_lists (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   status text not null default 'activa' check (status in ('activa', 'completada')),
+  list_date date not null default current_date,
+  total_spent numeric(12, 2),
   created_by uuid not null references public.profiles (id) on delete cascade,
   created_at timestamptz not null default now()
 );
