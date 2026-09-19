@@ -91,6 +91,37 @@ export interface TaskFormData {
 export type ShoppingListStatus = 'activa' | 'completada';
 export type ShoppingStore = 'supermercado' | 'farmacia' | 'otros';
 
+/** Categorías de productos en la lista de compras (orden alfabético por etiqueta en español). */
+export const SHOPPING_ITEM_CATEGORIES = [
+  'almacen',
+  'bebidas',
+  'congelados',
+  'extraordinario',
+  'lacteos',
+  'limpieza',
+] as const;
+
+export type ShoppingItemCategory = (typeof SHOPPING_ITEM_CATEGORIES)[number];
+
+const LEGACY_SHOPPING_CATEGORY: Record<string, ShoppingItemCategory> = {
+  supermercado: 'almacen',
+  carniceria: 'almacen',
+  verduleria: 'almacen',
+  delivery: 'extraordinario',
+  gastos_personales: 'extraordinario',
+  extraordinarios: 'extraordinario',
+  farmacia: 'extraordinario',
+  servicios: 'extraordinario',
+  mantenimiento: 'limpieza',
+};
+
+export function normalizeShoppingItemCategory(value: string): ShoppingItemCategory {
+  if ((SHOPPING_ITEM_CATEGORIES as readonly string[]).includes(value)) {
+    return value as ShoppingItemCategory;
+  }
+  return LEGACY_SHOPPING_CATEGORY[value] ?? 'almacen';
+}
+
 export interface ShoppingList {
   id: string;
   name: string;
@@ -108,7 +139,7 @@ export interface ShoppingItem {
   quantity: number;
   unit: string;
   store: ShoppingStore;
-  category: ExpenseCategory;
+  category: ShoppingItemCategory;
   is_purchased: boolean;
   estimated_price: number | null;
   added_by: string;

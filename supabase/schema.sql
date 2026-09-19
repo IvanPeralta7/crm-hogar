@@ -103,7 +103,7 @@ create table if not exists public.shopping_items (
   quantity numeric(10, 2) not null default 1 check (quantity > 0),
   unit text not null default 'unidad',
   store text not null default 'supermercado' check (store in ('supermercado', 'farmacia', 'otros')),
-  category text not null default 'supermercado',
+  category text not null default 'almacen',
   is_purchased boolean not null default false,
   estimated_price numeric(12, 2),
   added_by uuid not null references public.profiles (id) on delete cascade,

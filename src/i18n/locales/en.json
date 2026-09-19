@@ -88,6 +88,17 @@
     "addItem": "Add Item",
     "items": "{{count}} items",
     "addToStore": "Add to {{store}}",
+    "addToCategory": "Add to {{category}}",
+    "previousPurchaseTotal": "Previous purchase",
+    "emptyCategory": "No items in this category",
+    "itemCategories": {
+      "almacen": "Pantry",
+      "bebidas": "Beverages",
+      "congelados": "Frozen",
+      "extraordinario": "Extraordinary",
+      "lacteos": "Dairy",
+      "limpieza": "Cleaning"
+    },
     "mostPurchased": "Most purchased",
     "noPurchasedYet": "No purchased products yet",
     "unitsLabel": "units",

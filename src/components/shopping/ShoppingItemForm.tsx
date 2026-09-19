@@ -1,14 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
-import { EXPENSE_CATEGORIES, type ExpenseCategory, type ShoppingStore } from '../../types';
+import {
+  SHOPPING_ITEM_CATEGORIES,
+  type ShoppingItemCategory,
+  type ShoppingStore,
+} from '../../types';
 
 export interface ShoppingItemFormData {
   name: string;
   quantity: number;
   unit: string;
   store: ShoppingStore;
-  category: ExpenseCategory;
+  category: ShoppingItemCategory;
   estimated_price: number | null;
 }
 
@@ -17,22 +21,18 @@ interface ShoppingItemFormProps {
   onClose: () => void;
   onSubmit: (data: ShoppingItemFormData) => Promise<void>;
   defaultStore?: ShoppingStore;
+  defaultCategory?: ShoppingItemCategory;
   defaultName?: string;
 }
 
 const UNITS = ['unidad', 'kg', 'litro'] as const;
-
-const STORE_DEFAULT_CATEGORY: Record<ShoppingStore, ExpenseCategory> = {
-  supermercado: 'supermercado',
-  farmacia: 'farmacia',
-  otros: 'supermercado',
-};
 
 export function ShoppingItemForm({
   isOpen,
   onClose,
   onSubmit,
   defaultStore = 'supermercado',
+  defaultCategory = 'almacen',
   defaultName = '',
 }: ShoppingItemFormProps) {
   const { t } = useTranslation();
@@ -40,7 +40,7 @@ export function ShoppingItemForm({
   const [quantity, setQuantity] = useState('1');
   const [unit, setUnit] = useState<string>('unidad');
   const [store, setStore] = useState<ShoppingStore>(defaultStore);
-  const [category, setCategory] = useState<ExpenseCategory>(STORE_DEFAULT_CATEGORY[defaultStore]);
+  const [category, setCategory] = useState<ShoppingItemCategory>(defaultCategory);
   const [price, setPrice] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,17 +51,12 @@ export function ShoppingItemForm({
     setQuantity('1');
     setUnit('unidad');
     setStore(defaultStore);
-    setCategory(STORE_DEFAULT_CATEGORY[defaultStore]);
+    setCategory(defaultCategory);
     setPrice('');
     setError(null);
-  }, [isOpen, defaultStore, defaultName]);
+  }, [isOpen, defaultStore, defaultCategory, defaultName]);
 
   if (!isOpen) return null;
-
-  const handleStoreChange = (nextStore: ShoppingStore) => {
-    setStore(nextStore);
-    setCategory(STORE_DEFAULT_CATEGORY[nextStore]);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -149,7 +144,7 @@ export function ShoppingItemForm({
             </label>
             <select
               value={store}
-              onChange={(e) => handleStoreChange(e.target.value as ShoppingStore)}
+              onChange={(e) => setStore(e.target.value as ShoppingStore)}
               className="field-input"
             >
               <option value="supermercado">{t('shopping.store.supermercado')}</option>
@@ -160,16 +155,17 @@ export function ShoppingItemForm({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              {t('shopping.categoryLabel')}
+              {t('shopping.categoryLabel')} *
             </label>
             <select
               value={category}
-              onChange={(e) => setCategory(e.target.value as ExpenseCategory)}
+              onChange={(e) => setCategory(e.target.value as ShoppingItemCategory)}
+              required
               className="field-input"
             >
-              {EXPENSE_CATEGORIES.map((cat) => (
+              {SHOPPING_ITEM_CATEGORIES.map((cat) => (
                 <option key={cat} value={cat}>
-                  {t(`expenses.categories.${cat}`)}
+                  {t(`shopping.itemCategories.${cat}`)}
                 </option>
               ))}
             </select>

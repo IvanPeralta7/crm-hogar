@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Archive, Minus, Plus, ShoppingCart, Cross, Save } from 'lucide-react';
+import { Archive, Minus, Plus, Save, Tag } from 'lucide-react';
 import { TopBar } from '../components/layout/TopBar';
 import {
   ShoppingItemForm,
@@ -8,16 +8,21 @@ import {
 } from '../components/shopping/ShoppingItemForm';
 import { useAuth } from '../contexts/AuthContext';
 import {
-  mockPurchasedHistory,
   mockShoppingItems,
   mockShoppingList,
   mockShoppingLists,
 } from '../data/mockData';
 import { formatLocalDate, todayLocalDateString } from '../lib/dates';
 import { isDemoMode } from '../lib/demoMode';
-import { aggregateMostPurchased } from '../lib/shoppingStats';
 import { getSupabase } from '../lib/supabaseClient';
-import type { MostPurchasedItem, ShoppingItem, ShoppingList, ShoppingStore } from '../types';
+import {
+  normalizeShoppingItemCategory,
+  SHOPPING_ITEM_CATEGORIES,
+  type ShoppingItem,
+  type ShoppingItemCategory,
+  type ShoppingList,
+  type ShoppingStore,
+} from '../types';
 
 type DemoListsState = {
   lists: ShoppingList[];
@@ -37,9 +42,9 @@ export function ShoppingPage() {
   const [archivedLists, setArchivedLists] = useState<ShoppingList[]>([]);
   const [viewListId, setViewListId] = useState<string | 'active'>('active');
   const [items, setItems] = useState<ShoppingItem[]>([]);
-  const [mostPurchased, setMostPurchased] = useState<MostPurchasedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
+  const [formDefaultCategory, setFormDefaultCategory] = useState<ShoppingItemCategory>('almacen');
   const [totalSpentInput, setTotalSpentInput] = useState('');
   const [savingTotal, setSavingTotal] = useState(false);
 
@@ -58,40 +63,16 @@ export function ShoppingPage() {
     }
   }, [viewingList?.id, viewingList?.total_spent]);
 
-  const loadMostPurchased = useCallback(async () => {
-    if (isDemoMode) {
-      setMostPurchased(aggregateMostPurchased(mockPurchasedHistory));
-      return;
-    }
-
-    const { data, error } = await getSupabase()
-      .from('shopping_items')
-      .select('name, quantity')
-      .eq('is_purchased', true);
-
-    if (error) throw error;
-
-    const aggregated = aggregateMostPurchased(
-      (data ?? []).map((row, index) => ({
-        id: String(index),
-        list_id: '',
-        name: row.name,
-        quantity: Number(row.quantity),
-        unit: 'unidad',
-        store: 'supermercado' as ShoppingStore,
-        category: 'supermercado',
-        is_purchased: true,
-        estimated_price: null,
-        added_by: '',
-        created_at: '',
-      })),
-    );
-    setMostPurchased(aggregated);
-  }, []);
-
   const loadItems = useCallback(async (listId: string) => {
     if (isDemoMode) {
-      setItems(demoListsState.items.filter((item) => item.list_id === listId));
+      setItems(
+        demoListsState.items
+          .filter((item) => item.list_id === listId)
+          .map((item) => ({
+            ...item,
+            category: normalizeShoppingItemCategory(item.category),
+          })),
+      );
       return;
     }
 
@@ -102,7 +83,12 @@ export function ShoppingPage() {
       .order('created_at', { ascending: true });
 
     if (error) throw error;
-    setItems(data ?? []);
+    setItems(
+      (data ?? []).map((row) => ({
+        ...row,
+        category: normalizeShoppingItemCategory(row.category),
+      })),
+    );
   }, []);
 
   const loadLists = useCallback(async () => {
@@ -152,14 +138,12 @@ export function ShoppingPage() {
       } else {
         setItems([]);
       }
-
-      await loadMostPurchased();
     } catch (err) {
       console.error('Error loading shopping data:', err);
     } finally {
       setLoading(false);
     }
-  }, [loadItems, loadLists, loadMostPurchased, viewListId]);
+  }, [loadItems, loadLists, viewListId]);
 
   useEffect(() => {
     void loadData();
@@ -241,7 +225,10 @@ export function ShoppingPage() {
       .single();
 
     if (error) throw error;
-    setItems((prev) => [...prev, data]);
+    setItems((prev) => [
+      ...prev,
+      { ...data, category: normalizeShoppingItemCategory(data.category) },
+    ]);
   };
 
   const handleTogglePurchased = async (item: ShoppingItem) => {
@@ -255,11 +242,6 @@ export function ShoppingPage() {
       setItems((prev) =>
         prev.map((row) => (row.id === item.id ? { ...row, is_purchased: nextValue } : row)),
       );
-      if (nextValue) {
-        setMostPurchased(
-          aggregateMostPurchased([...mockPurchasedHistory, { ...item, is_purchased: true }]),
-        );
-      }
       return;
     }
 
@@ -272,7 +254,6 @@ export function ShoppingPage() {
     setItems((prev) =>
       prev.map((row) => (row.id === item.id ? { ...row, is_purchased: nextValue } : row)),
     );
-    await loadMostPurchased();
   };
 
   const handleQuantityChange = async (item: ShoppingItem, delta: number) => {
@@ -411,21 +392,43 @@ export function ShoppingPage() {
     0,
   );
 
-  const grouped = useMemo(() => {
-    const groups: Record<ShoppingStore, ShoppingItem[]> = {
-      supermercado: [],
-      farmacia: [],
-      otros: [],
+  const previousPurchaseTotal = useMemo(() => {
+    const completed = [...archivedLists].sort((a, b) => b.list_date.localeCompare(a.list_date));
+    if (completed.length === 0) return null;
+
+    if (viewListId === 'active') {
+      return completed[0]?.total_spent ?? null;
+    }
+
+    const index = completed.findIndex((row) => row.id === viewListId);
+    if (index === -1) return null;
+    return completed[index + 1]?.total_spent ?? null;
+  }, [archivedLists, viewListId]);
+
+  const groupedByCategory = useMemo(() => {
+    const groups: Record<ShoppingItemCategory, ShoppingItem[]> = {
+      almacen: [],
+      bebidas: [],
+      congelados: [],
+      extraordinario: [],
+      lacteos: [],
+      limpieza: [],
     };
     items.forEach((item) => {
-      groups[item.store].push(item);
+      groups[item.category].push(item);
     });
     return groups;
   }, [items]);
 
-  const supermarketItems = grouped.supermercado;
+  const openAddForm = (category: ShoppingItemCategory) => {
+    setFormDefaultCategory(category);
+    setFormOpen(true);
+  };
 
   const listSelectorValue = viewListId === 'active' ? 'active' : viewListId;
+
+  const formatMoney = (amount: number) =>
+    amount.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   return (
     <>
@@ -445,7 +448,13 @@ export function ShoppingPage() {
             <p className="text-xs text-amber-700 mt-1">{t('shopping.readOnlyList')}</p>
           )}
           <p className="text-sanctuary-teal font-medium mt-1">
-            {t('shopping.estimatedTotal')}: ${estimatedTotal.toFixed(2)}
+            {t('shopping.estimatedTotal')}: ${formatMoney(estimatedTotal)}
+            {previousPurchaseTotal != null && (
+              <span className="text-gray-600 font-normal">
+                {' '}
+                · {t('shopping.previousPurchaseTotal')}: ${formatMoney(previousPurchaseTotal)}
+              </span>
+            )}
           </p>
         </div>
 
@@ -511,64 +520,28 @@ export function ShoppingPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div className="xl:col-span-2 space-y-4">
-          {loading ? (
-            <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center text-gray-500">
-              {t('common.loading')}
-            </div>
-          ) : (
-            <>
-              <StoreCard
-                store="supermercado"
-                items={supermarketItems}
+      <div className="space-y-4">
+        {loading ? (
+          <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center text-gray-500">
+            {t('common.loading')}
+          </div>
+        ) : (
+          SHOPPING_ITEM_CATEGORIES.map((category) => {
+            const categoryItems = groupedByCategory[category];
+            if (isReadOnly && categoryItems.length === 0) return null;
+            return (
+              <CategoryCard
+                key={category}
+                category={category}
+                items={categoryItems}
                 readOnly={isReadOnly}
                 onToggle={(item) => void handleTogglePurchased(item)}
                 onQuantityChange={(item, delta) => void handleQuantityChange(item, delta)}
-                onAddToStore={() => setFormOpen(true)}
-                showAddButton={!isReadOnly}
+                onAdd={() => openAddForm(category)}
               />
-              {(Object.keys(grouped) as ShoppingStore[])
-                .filter((store) => store !== 'supermercado')
-                .map((store) => {
-                  const storeItems = grouped[store];
-                  if (storeItems.length === 0) return null;
-                  return (
-                    <StoreCard
-                      key={store}
-                      store={store}
-                      items={storeItems}
-                      readOnly={isReadOnly}
-                      onToggle={(item) => void handleTogglePurchased(item)}
-                      onQuantityChange={(item, delta) => void handleQuantityChange(item, delta)}
-                      onAddToStore={() => undefined}
-                      showAddButton={false}
-                    />
-                  );
-                })}
-            </>
-          )}
-        </div>
-
-        <div>
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-            <h3 className="font-semibold mb-4">{t('shopping.mostPurchased')}</h3>
-            {mostPurchased.length === 0 ? (
-              <p className="text-sm text-gray-500">{t('shopping.noPurchasedYet')}</p>
-            ) : (
-              <div className="space-y-3">
-                {mostPurchased.map((item) => (
-                  <div key={item.name} className="flex items-center justify-between text-sm">
-                    <span className="text-gray-800">{item.name}</span>
-                    <span className="font-medium text-sanctuary-teal">
-                      {item.totalQuantity} {t('shopping.unitsLabel')}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+            );
+          })
+        )}
       </div>
 
       <ShoppingItemForm
@@ -576,47 +549,42 @@ export function ShoppingPage() {
         onClose={() => setFormOpen(false)}
         onSubmit={handleAddItem}
         defaultStore="supermercado"
+        defaultCategory={formDefaultCategory}
       />
     </>
   );
 }
 
-function StoreCard({
-  store,
+function CategoryCard({
+  category,
   items,
   readOnly,
   onToggle,
   onQuantityChange,
-  onAddToStore,
-  showAddButton,
+  onAdd,
 }: {
-  store: ShoppingStore;
+  category: ShoppingItemCategory;
   items: ShoppingItem[];
   readOnly: boolean;
   onToggle: (item: ShoppingItem) => void;
   onQuantityChange: (item: ShoppingItem, delta: number) => void;
-  onAddToStore: () => void;
-  showAddButton: boolean;
+  onAdd: () => void;
 }) {
   const { t } = useTranslation();
-  const icon =
-    store === 'farmacia' ? (
-      <Cross className="text-green-600" size={20} />
-    ) : (
-      <ShoppingCart className="text-sanctuary-teal" size={20} />
-    );
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
       <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100">
-        {icon}
-        <h3 className="font-semibold">{t(`shopping.store.${store}`)}</h3>
+        <Tag className="text-sanctuary-teal" size={20} />
+        <h3 className="font-semibold">{t(`shopping.itemCategories.${category}`)}</h3>
         <span className="ml-auto text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600">
           {t('shopping.items', { count: items.length })}
         </span>
       </div>
       {items.length === 0 ? (
-        <div className="px-6 py-8 text-center text-sm text-gray-500">{t('shopping.emptyStore')}</div>
+        <div className="px-6 py-8 text-center text-sm text-gray-500">
+          {t('shopping.emptyCategory')}
+        </div>
       ) : (
         <div className="divide-y divide-gray-100">
           {items.map((item) => (
@@ -662,13 +630,13 @@ function StoreCard({
           ))}
         </div>
       )}
-      {showAddButton && (
+      {!readOnly && (
         <button
           type="button"
-          onClick={onAddToStore}
+          onClick={onAdd}
           className="w-full py-3 text-sm text-sanctuary-teal border-t border-dashed border-gray-200 hover:bg-gray-50"
         >
-          + {t('shopping.addToStore', { store: t(`shopping.store.${store}`) })}
+          + {t('shopping.addToCategory', { category: t(`shopping.itemCategories.${category}`) })}
         </button>
       )}
     </div>

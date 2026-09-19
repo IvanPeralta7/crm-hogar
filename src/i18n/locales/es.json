@@ -88,6 +88,17 @@
     "addItem": "Agregar item",
     "items": "{{count}} items",
     "addToStore": "Agregar a {{store}}",
+    "addToCategory": "Agregar a {{category}}",
+    "previousPurchaseTotal": "Compra anterior",
+    "emptyCategory": "Sin items en esta categoría",
+    "itemCategories": {
+      "almacen": "Almacén",
+      "bebidas": "Bebidas",
+      "congelados": "Congelados",
+      "extraordinario": "Extraordinario",
+      "lacteos": "Lácteos",
+      "limpieza": "Limpieza"
+    },
     "mostPurchased": "Más comprados",
     "noPurchasedYet": "Aún no hay productos comprados",
     "unitsLabel": "unidades",
