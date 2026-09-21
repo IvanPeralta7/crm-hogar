@@ -241,7 +241,7 @@ export const mockExpenses: Expense[] = [
     description: '',
     date: today,
     amount: 211.25,
-    category: 'mantenimiento',
+    category: 'hogar_fijos',
     user_id: demoUserId,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),

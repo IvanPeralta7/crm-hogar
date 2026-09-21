@@ -11,7 +11,12 @@ import {
   getMonthRange,
   listMonthKeysFromDates,
 } from '../../lib/dates';
-import { EXPENSE_CATEGORIES, type Expense, type ExpenseCategory } from '../../types';
+import {
+  EXPENSE_CATEGORIES,
+  normalizeExpenseCategory,
+  type Expense,
+  type ExpenseCategory,
+} from '../../types';
 import { ConfirmModal } from '../ConfirmModal';
 
 export function ExpenseList() {
@@ -44,8 +49,15 @@ export function ExpenseList() {
   const fetchExpensesForMonth = useCallback(async (monthKey: string) => {
     const { start, end } = getMonthRange(monthKey);
 
+    const mapExpense = (expense: Expense): Expense => ({
+      ...expense,
+      category: normalizeExpenseCategory(expense.category),
+    });
+
     if (isDemoMode) {
-      return mockExpenses.filter((expense) => expense.date >= start && expense.date <= end);
+      return mockExpenses
+        .filter((expense) => expense.date >= start && expense.date <= end)
+        .map(mapExpense);
     }
 
     const { data, error } = await getSupabase()
@@ -56,7 +68,7 @@ export function ExpenseList() {
       .order('date', { ascending: false });
 
     if (error) throw error;
-    return data ?? [];
+    return (data ?? []).map(mapExpense);
   }, []);
 
   const refreshCurrentMonth = useCallback(async () => {

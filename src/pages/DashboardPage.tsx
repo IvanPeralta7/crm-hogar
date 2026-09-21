@@ -8,7 +8,7 @@ import { isDemoMode } from '../lib/demoMode';
 import { mockExpenses, mockShoppingItems, mockTasks } from '../data/mockData';
 import { getTimeGreetingKey } from '../lib/getTimeGreeting';
 import { getCurrentMonthKey, getMonthRange } from '../lib/dates';
-import type { Expense, ExpenseCategory, Task } from '../types';
+import { normalizeExpenseCategory, type Expense, type ExpenseCategory, type Task } from '../types';
 
 const CHART_COLORS = ['#006D6D', '#4CAF93', '#A78BFA'];
 
@@ -23,7 +23,11 @@ export function DashboardPage() {
     async function load() {
       if (isDemoMode) {
         setTasks(mockTasks.filter((task) => task.status !== 'completada'));
-        setExpenses(mockExpenses.filter((e) => e.date.startsWith(getCurrentMonthKey())));
+        setExpenses(
+          mockExpenses
+            .filter((e) => e.date.startsWith(getCurrentMonthKey()))
+            .map((e) => ({ ...e, category: normalizeExpenseCategory(e.category) })),
+        );
         setShoppingCount(mockShoppingItems.filter((item) => !item.is_purchased).length);
         setListCount(1);
         return;
@@ -45,7 +49,12 @@ export function DashboardPage() {
       ]);
 
       setTasks(tasksRes.data ?? []);
-      setExpenses(expensesRes.data ?? []);
+      setExpenses(
+        (expensesRes.data ?? []).map((e) => ({
+          ...e,
+          category: normalizeExpenseCategory(e.category),
+        })),
+      );
       setShoppingCount(itemsRes.data?.length ?? 0);
       setListCount(listsRes.data?.length ?? 0);
     }

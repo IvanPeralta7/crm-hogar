@@ -3,11 +3,10 @@ export type ExpenseCategory =
   | 'carniceria'
   | 'verduleria'
   | 'delivery'
-  | 'gastos_personales'
   | 'extraordinarios'
-  | 'farmacia'
   | 'servicios'
-  | 'mantenimiento';
+  | 'hogar_fijos'
+  | 'almacen_diario';
 
 export interface Expense {
   id: string;
@@ -34,12 +33,24 @@ export const EXPENSE_CATEGORIES: ExpenseCategory[] = [
   'carniceria',
   'verduleria',
   'delivery',
-  'gastos_personales',
   'extraordinarios',
-  'farmacia',
   'servicios',
-  'mantenimiento',
+  'hogar_fijos',
+  'almacen_diario',
 ];
+
+const LEGACY_EXPENSE_CATEGORY: Record<string, ExpenseCategory> = {
+  gastos_personales: 'extraordinarios',
+  farmacia: 'almacen_diario',
+  mantenimiento: 'hogar_fijos',
+};
+
+export function normalizeExpenseCategory(value: string): ExpenseCategory {
+  if ((EXPENSE_CATEGORIES as readonly string[]).includes(value)) {
+    return value as ExpenseCategory;
+  }
+  return LEGACY_EXPENSE_CATEGORY[value] ?? 'extraordinarios';
+}
 
 export type TaskStatus = 'pendiente' | 'completada';
 export type TaskCriticality = 'urgente' | 'prioritaria' | 'pateable';

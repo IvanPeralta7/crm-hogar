@@ -182,11 +182,10 @@
       "carniceria": "Carnicería",
       "verduleria": "Verdulería",
       "delivery": "Delivery",
-      "gastos_personales": "Gastos personales",
       "extraordinarios": "Extraordinarios",
-      "farmacia": "Farmacia",
       "servicios": "Servicios",
-      "mantenimiento": "Mantenimiento"
+      "hogar_fijos": "Hogar fijos",
+      "almacen_diario": "Almacén diario"
     }
   },
   "auth": {

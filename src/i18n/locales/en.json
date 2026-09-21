@@ -182,11 +182,10 @@
       "carniceria": "Butcher",
       "verduleria": "Greengrocer",
       "delivery": "Delivery",
-      "gastos_personales": "Personal Expenses",
       "extraordinarios": "Extraordinary",
-      "farmacia": "Pharmacy",
       "servicios": "Utilities",
-      "mantenimiento": "Maintenance"
+      "hogar_fijos": "Fixed home expenses",
+      "almacen_diario": "Daily pantry"
     }
   },
   "auth": {
