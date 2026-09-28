@@ -387,11 +387,6 @@ export function ShoppingPage() {
     }
   };
 
-  const estimatedTotal = items.reduce(
-    (sum, item) => sum + (item.estimated_price ?? 0) * item.quantity,
-    0,
-  );
-
   const previousPurchaseTotal = useMemo(() => {
     const completed = [...archivedLists].sort((a, b) => b.list_date.localeCompare(a.list_date));
     if (completed.length === 0) return null;
@@ -447,15 +442,11 @@ export function ShoppingPage() {
           {isReadOnly && (
             <p className="text-xs text-amber-700 mt-1">{t('shopping.readOnlyList')}</p>
           )}
-          <p className="text-sanctuary-teal font-medium mt-1">
-            {t('shopping.estimatedTotal')}: ${formatMoney(estimatedTotal)}
-            {previousPurchaseTotal != null && (
-              <span className="text-gray-600 font-normal">
-                {' '}
-                · {t('shopping.previousPurchaseTotal')}: ${formatMoney(previousPurchaseTotal)}
-              </span>
-            )}
-          </p>
+          {previousPurchaseTotal != null && (
+            <p className="text-sanctuary-teal font-medium mt-1">
+              {t('shopping.previousPurchaseTotal')}: ${formatMoney(previousPurchaseTotal)}
+            </p>
+          )}
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2 flex-wrap">
@@ -621,11 +612,6 @@ function CategoryCard({
                   <Plus size={14} />
                 </button>
               </div>
-              {item.estimated_price != null && (
-                <span className="text-sm font-medium w-16 text-right">
-                  ${(item.estimated_price * item.quantity).toFixed(2)}
-                </span>
-              )}
             </div>
           ))}
         </div>

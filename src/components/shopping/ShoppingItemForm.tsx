@@ -25,8 +25,6 @@ interface ShoppingItemFormProps {
   defaultName?: string;
 }
 
-const UNITS = ['unidad', 'kg', 'litro'] as const;
-
 export function ShoppingItemForm({
   isOpen,
   onClose,
@@ -38,10 +36,8 @@ export function ShoppingItemForm({
   const { t } = useTranslation();
   const [name, setName] = useState(defaultName);
   const [quantity, setQuantity] = useState('1');
-  const [unit, setUnit] = useState<string>('unidad');
   const [store, setStore] = useState<ShoppingStore>(defaultStore);
   const [category, setCategory] = useState<ShoppingItemCategory>(defaultCategory);
-  const [price, setPrice] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -49,10 +45,8 @@ export function ShoppingItemForm({
     if (!isOpen) return;
     setName(defaultName);
     setQuantity('1');
-    setUnit('unidad');
     setStore(defaultStore);
     setCategory(defaultCategory);
-    setPrice('');
     setError(null);
   }, [isOpen, defaultStore, defaultCategory, defaultName]);
 
@@ -67,10 +61,10 @@ export function ShoppingItemForm({
       await onSubmit({
         name: name.trim(),
         quantity: Math.max(parseFloat(quantity) || 1, 0.01),
-        unit,
+        unit: 'unidad',
         store,
         category,
-        estimated_price: price ? parseFloat(price) : null,
+        estimated_price: null,
       });
       onClose();
     } catch (err) {
@@ -109,33 +103,19 @@ export function ShoppingItemForm({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {t('shopping.quantityLabel')} *
-              </label>
-              <input
-                type="number"
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-                required
-                min="0.01"
-                step="0.01"
-                className="field-input"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {t('shopping.unitLabel')}
-              </label>
-              <select value={unit} onChange={(e) => setUnit(e.target.value)} className="field-input">
-                {UNITS.map((u) => (
-                  <option key={u} value={u}>
-                    {t(`shopping.units.${u}`)}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {t('shopping.quantityLabel')} *
+            </label>
+            <input
+              type="number"
+              value={quantity}
+              onChange={(e) => setQuantity(e.target.value)}
+              required
+              min="0.01"
+              step="0.01"
+              className="field-input"
+            />
           </div>
 
           <div>
@@ -169,21 +149,6 @@ export function ShoppingItemForm({
                 </option>
               ))}
             </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              {t('shopping.priceLabel')}
-            </label>
-            <input
-              type="number"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              min="0"
-              step="0.01"
-              className="field-input"
-              placeholder="0.00"
-            />
           </div>
 
           <div className="flex gap-3 pt-2">
