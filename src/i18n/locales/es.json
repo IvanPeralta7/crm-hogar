@@ -192,7 +192,11 @@
   "feli": {
     "title": "Feli",
     "tabs": {
-      "inventory": "Inventario"
+      "inventory": "Inventario",
+      "tasks": "Tareas para Feli"
+    },
+    "tasks": {
+      "listTitle": "Tareas para Feli"
     },
     "inventory": {
       "formTitle": "Agregar al inventario",

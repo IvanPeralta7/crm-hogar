@@ -1,18 +1,30 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
-import { TASK_CATEGORIES, type Task, type TaskFormData } from '../../types';
+import {
+  TASK_CATEGORIES,
+  type FeliTask,
+  type TaskCategory,
+  type TaskFormData,
+} from '../../types';
 
 interface TaskFormProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: TaskFormData) => Promise<void>;
-  initialTask?: Task | null;
+  initialTask?: (FeliTask & { category?: TaskCategory }) | null;
+  showCategory?: boolean;
 }
 
 const CRITICALITIES = ['urgente', 'prioritaria', 'pateable'] as const;
 
-export function TaskForm({ isOpen, onClose, onSubmit, initialTask }: TaskFormProps) {
+export function TaskForm({
+  isOpen,
+  onClose,
+  onSubmit,
+  initialTask,
+  showCategory = true,
+}: TaskFormProps) {
   const { t } = useTranslation();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -130,22 +142,24 @@ export function TaskForm({ isOpen, onClose, onSubmit, initialTask }: TaskFormPro
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {t('tasks.categoryLabel')} *
-              </label>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value as TaskFormData['category'])}
-                className="field-input"
-              >
-                {TASK_CATEGORIES.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {t(`tasks.category.${cat}`)}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {showCategory && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {t('tasks.categoryLabel')} *
+                </label>
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value as TaskFormData['category'])}
+                  className="field-input"
+                >
+                  {TASK_CATEGORIES.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {t(`tasks.category.${cat}`)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 {t('tasks.criticalityLabel')} *

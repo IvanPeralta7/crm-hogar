@@ -132,6 +132,25 @@ alter table public.feli_inventory_items enable row level security;
 create policy "Authenticated users full access feli_inventory_items"
   on public.feli_inventory_items for all to authenticated using (true) with check (true);
 
+-- Feli tasks
+create table if not exists public.feli_tasks (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  description text,
+  status text not null default 'pendiente' check (status in ('pendiente', 'completada')),
+  priority text not null default 'prioritaria' check (priority in ('urgente', 'prioritaria', 'pateable')),
+  start_date date,
+  end_date date,
+  created_by uuid not null references public.profiles (id) on delete cascade,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.feli_tasks enable row level security;
+
+create policy "Authenticated users full access feli_tasks"
+  on public.feli_tasks for all to authenticated using (true) with check (true);
+
 -- Updated_at trigger for tasks and expenses
 create or replace function public.set_updated_at()
 returns trigger
@@ -150,6 +169,9 @@ create trigger expenses_updated_at before update on public.expenses
   for each row execute function public.set_updated_at();
 
 create trigger feli_inventory_items_updated_at before update on public.feli_inventory_items
+  for each row execute function public.set_updated_at();
+
+create trigger feli_tasks_updated_at before update on public.feli_tasks
   for each row execute function public.set_updated_at();
 
 create or replace view public.most_purchased_items as

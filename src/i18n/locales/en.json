@@ -210,7 +210,11 @@
   "feli": {
     "title": "Feli",
     "tabs": {
-      "inventory": "Inventory"
+      "inventory": "Inventory",
+      "tasks": "Tasks for Feli"
+    },
+    "tasks": {
+      "listTitle": "Tasks for Feli"
     },
     "inventory": {
       "formTitle": "Add to inventory",

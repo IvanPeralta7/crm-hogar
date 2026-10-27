@@ -1,4 +1,11 @@
-import type { Expense, InventoryItem, ShoppingItem, ShoppingList, Task } from '../types';
+import type {
+  Expense,
+  FeliTask,
+  InventoryItem,
+  ShoppingItem,
+  ShoppingList,
+  Task,
+} from '../types';
 import { todayLocalDateString } from '../lib/dates';
 
 const demoUserId = '00000000-0000-0000-0000-000000000001';
@@ -259,6 +266,33 @@ export const mockExpenses: Expense[] = [
     amount: 420,
     category: 'carniceria',
     user_id: demoUserId,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+];
+
+export const mockFeliTasks: FeliTask[] = [
+  {
+    id: 'ft-1',
+    title: 'Turno con el pediatra',
+    description: 'Control mensual',
+    status: 'pendiente',
+    priority: 'urgente',
+    start_date: today,
+    end_date: today,
+    created_by: demoUserId,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'ft-2',
+    title: 'Ordenar ropa que ya no le queda',
+    description: null,
+    status: 'completada',
+    priority: 'pateable',
+    start_date: today,
+    end_date: today,
+    created_by: demoUserId,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },

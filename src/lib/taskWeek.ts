@@ -15,14 +15,16 @@ export function getWeekRange(date = new Date()) {
   };
 }
 
-export function isTaskInWeek(task: Task, weekStart: string, weekEnd: string) {
+type WeekTask = Pick<Task, 'start_date' | 'end_date' | 'created_at' | 'status'>;
+
+export function isTaskInWeek(task: WeekTask, weekStart: string, weekEnd: string) {
   const dates = [task.start_date, task.end_date, task.created_at.split('T')[0]].filter(
     Boolean,
   ) as string[];
   return dates.some((value) => value >= weekStart && value <= weekEnd);
 }
 
-export function getWeeklyStats(tasks: Task[]) {
+export function getWeeklyStats<T extends WeekTask>(tasks: T[]) {
   const { start, end } = getWeekRange();
   const weeklyTasks = tasks.filter((task) => isTaskInWeek(task, start, end));
   const completed = weeklyTasks.filter((task) => task.status === 'completada').length;

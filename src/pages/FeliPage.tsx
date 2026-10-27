@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Package } from 'lucide-react';
+import { CheckSquare, Package } from 'lucide-react';
 import { TopBar } from '../components/layout/TopBar';
+import { FeliTasksSection } from '../components/feli/FeliTasksSection';
 import { InventorySection } from '../components/feli/InventorySection';
 
-type View = 'inventory';
+type View = 'inventory' | 'tasks';
 
 export function FeliPage() {
   const { t } = useTranslation();
@@ -22,9 +23,16 @@ export function FeliPage() {
         >
           {t('feli.tabs.inventory')}
         </TabButton>
+        <TabButton
+          active={view === 'tasks'}
+          onClick={() => setView('tasks')}
+          icon={<CheckSquare size={18} />}
+        >
+          {t('feli.tabs.tasks')}
+        </TabButton>
       </nav>
 
-      {view === 'inventory' && <InventorySection />}
+      {view === 'inventory' ? <InventorySection /> : <FeliTasksSection />}
     </>
   );
 }

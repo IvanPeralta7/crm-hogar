@@ -89,6 +89,10 @@ export interface Task {
   updated_at: string;
 }
 
+export type FeliTask = Omit<Task, 'category'>;
+
+export type FeliTaskFormData = Omit<TaskFormData, 'category'>;
+
 export interface TaskFormData {
   title: string;
   description: string;
