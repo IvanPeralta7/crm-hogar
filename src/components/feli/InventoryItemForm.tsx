@@ -8,17 +8,35 @@ interface InventoryItemFormProps {
   onSubmit: (data: InventoryItemFormData) => Promise<void>;
 }
 
+const NEW_CATEGORY = '__new__';
+
+const normalizeCategory = (value: string) => value.trim().replace(/\s+/g, ' ');
+
 export function InventoryItemForm({ categories, onSubmit }: InventoryItemFormProps) {
   const { t } = useTranslation();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [quantity, setQuantity] = useState('1');
-  const [category, setCategory] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [newCategory, setNewCategory] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const hasCategories = categories.length > 0;
+  const isNewCategory = !hasCategories || selectedCategory === NEW_CATEGORY;
+  const selectValue =
+    selectedCategory === NEW_CATEGORY
+      ? NEW_CATEGORY
+      : (categories.find(
+          (cat) =>
+            cat.toLocaleLowerCase('es') === selectedCategory.toLocaleLowerCase('es'),
+        ) ?? '');
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const category = normalizeCategory(isNewCategory ? newCategory : selectValue);
+    if (!category) return;
+
     setSaving(true);
     setError(null);
 
@@ -27,11 +45,13 @@ export function InventoryItemForm({ categories, onSubmit }: InventoryItemFormPro
         name: name.trim(),
         description: description.trim(),
         quantity: Math.max(parseInt(quantity, 10) || 0, 0),
-        category: category.trim().replace(/\s+/g, ' '),
+        category,
       });
       setName('');
       setDescription('');
       setQuantity('1');
+      setSelectedCategory(category);
+      setNewCategory('');
     } catch (err) {
       setError(err instanceof Error ? err.message : t('feli.inventory.errorSave'));
     } finally {
@@ -67,20 +87,35 @@ export function InventoryItemForm({ categories, onSubmit }: InventoryItemFormPro
           <label className="block text-sm font-medium text-gray-700 mb-1">
             {t('feli.inventory.categoryLabel')} *
           </label>
-          <input
-            type="text"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            required
-            list="feli-inventory-categories"
-            className="field-input"
-            placeholder={t('feli.inventory.categoryPlaceholder')}
-          />
-          <datalist id="feli-inventory-categories">
-            {categories.map((cat) => (
-              <option key={cat} value={cat} />
-            ))}
-          </datalist>
+          {hasCategories && (
+            <select
+              value={selectValue}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              required
+              className="field-input"
+            >
+              <option value="" disabled>
+                {t('feli.inventory.categorySelectPlaceholder')}
+              </option>
+              {categories.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+              <option value={NEW_CATEGORY}>+ {t('feli.inventory.newCategory')}</option>
+            </select>
+          )}
+          {isNewCategory && (
+            <input
+              type="text"
+              value={newCategory}
+              onChange={(e) => setNewCategory(e.target.value)}
+              required
+              autoFocus={hasCategories}
+              className={`field-input ${hasCategories ? 'mt-2' : ''}`}
+              placeholder={t('feli.inventory.newCategoryPlaceholder')}
+            />
+          )}
         </div>
 
         <div className="md:col-span-2">
