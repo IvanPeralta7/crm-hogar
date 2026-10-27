@@ -5,6 +5,7 @@ import {
   CheckSquare,
   ShoppingCart,
   Wallet,
+  Heart,
   LogOut,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -14,6 +15,7 @@ const navItems = [
   { to: '/tareas', icon: CheckSquare, labelKey: 'nav.tasks' },
   { to: '/compras', icon: ShoppingCart, labelKey: 'nav.shopping' },
   { to: '/gastos', icon: Wallet, labelKey: 'nav.expenses' },
+  { to: '/feli', icon: Heart, labelKey: 'nav.feli' },
 ] as const;
 
 export function Sidebar() {

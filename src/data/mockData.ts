@@ -1,4 +1,4 @@
-import type { Expense, ShoppingItem, ShoppingList, Task } from '../types';
+import type { Expense, InventoryItem, ShoppingItem, ShoppingList, Task } from '../types';
 import { todayLocalDateString } from '../lib/dates';
 
 const demoUserId = '00000000-0000-0000-0000-000000000001';
@@ -259,6 +259,39 @@ export const mockExpenses: Expense[] = [
     amount: 420,
     category: 'carniceria',
     user_id: demoUserId,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+];
+
+export const mockInventoryItems: InventoryItem[] = [
+  {
+    id: 'inv-1',
+    name: 'Pañales',
+    description: 'Talle M',
+    quantity: 40,
+    category: 'Higiene',
+    created_by: demoUserId,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'inv-2',
+    name: 'Toallitas húmedas',
+    description: 'Paquete x 50',
+    quantity: 3,
+    category: 'Higiene',
+    created_by: demoUserId,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'inv-3',
+    name: 'Body manga larga',
+    description: 'Talle 6-9 meses',
+    quantity: 5,
+    category: 'Ropa',
+    created_by: demoUserId,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },

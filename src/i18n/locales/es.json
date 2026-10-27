@@ -8,6 +8,7 @@
     "tasks": "Tareas",
     "shopping": "Compras",
     "expenses": "Gastos",
+    "feli": "Feli",
     "addNew": "Agregar",
     "logout": "Salir"
   },
@@ -186,6 +187,31 @@
       "servicios": "Servicios",
       "hogar_fijos": "Hogar fijos",
       "almacen_diario": "Almacén diario"
+    }
+  },
+  "feli": {
+    "title": "Feli",
+    "tabs": {
+      "inventory": "Inventario"
+    },
+    "inventory": {
+      "formTitle": "Agregar al inventario",
+      "nameLabel": "Elemento / producto",
+      "namePlaceholder": "Ej: Pañales",
+      "descriptionLabel": "Descripción",
+      "descriptionPlaceholder": "Ej: Talle M, marca, ubicación...",
+      "quantityLabel": "Cantidad",
+      "categoryLabel": "Categoría",
+      "categoryPlaceholder": "Escribí una categoría o elegí una existente",
+      "save": "Agregar",
+      "saving": "Guardando...",
+      "errorSave": "No se pudo guardar el elemento",
+      "errorAuth": "Tenés que iniciar sesión para agregar elementos",
+      "empty": "El inventario está vacío. Agregá el primer elemento.",
+      "itemsCount": "{{count}} elementos",
+      "increase": "Sumar uno",
+      "decrease": "Restar uno",
+      "deleteConfirm": "¿Eliminar \"{{name}}\" del inventario?"
     }
   },
   "auth": {

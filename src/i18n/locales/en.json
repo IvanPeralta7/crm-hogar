@@ -8,6 +8,7 @@
     "tasks": "Tasks",
     "shopping": "Shopping",
     "expenses": "Expenses",
+    "feli": "Feli",
     "addNew": "Add New",
     "logout": "Logout"
   },
@@ -205,6 +206,31 @@
     "title": "Configure Supabase",
     "description": "Create a .env file in the project root with your new Supabase project credentials:",
     "restart": "Then restart the dev server with npm run dev."
+  },
+  "feli": {
+    "title": "Feli",
+    "tabs": {
+      "inventory": "Inventory"
+    },
+    "inventory": {
+      "formTitle": "Add to inventory",
+      "nameLabel": "Item / product",
+      "namePlaceholder": "e.g. Diapers",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "e.g. Size M, brand, location...",
+      "quantityLabel": "Quantity",
+      "categoryLabel": "Category",
+      "categoryPlaceholder": "Type a category or pick an existing one",
+      "save": "Add",
+      "saving": "Saving...",
+      "errorSave": "Could not save the item",
+      "errorAuth": "You need to sign in to add items",
+      "empty": "The inventory is empty. Add the first item.",
+      "itemsCount": "{{count}} items",
+      "increase": "Add one",
+      "decrease": "Remove one",
+      "deleteConfirm": "Remove \"{{name}}\" from the inventory?"
+    }
   },
   "common": {
     "cancel": "Cancel",

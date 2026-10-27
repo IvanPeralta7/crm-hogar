@@ -7,6 +7,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { TasksPage } from './pages/TasksPage';
 import { ShoppingPage } from './pages/ShoppingPage';
 import { ExpensesPage } from './pages/ExpensesPage';
+import { FeliPage } from './pages/FeliPage';
 import { LoginPage } from './pages/LoginPage';
 import { SetupPage } from './pages/SetupPage';
 
@@ -27,6 +28,7 @@ function AppRoutes() {
         <Route path="/tareas" element={<TasksPage />} />
         <Route path="/compras" element={<ShoppingPage />} />
         <Route path="/gastos" element={<ExpensesPage />} />
+        <Route path="/feli" element={<FeliPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

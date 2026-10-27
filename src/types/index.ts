@@ -157,6 +157,24 @@ export interface ShoppingItem {
   created_at: string;
 }
 
+export interface InventoryItem {
+  id: string;
+  name: string;
+  description: string;
+  quantity: number;
+  category: string;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface InventoryItemFormData {
+  name: string;
+  description: string;
+  quantity: number;
+  category: string;
+}
+
 export interface MostPurchasedItem {
   name: string;
   totalQuantity: number;
